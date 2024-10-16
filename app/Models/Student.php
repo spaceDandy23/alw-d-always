@@ -13,8 +13,8 @@ class Student extends Model
     protected $fillable = ['name', 'grade', 'section'];
 
 
-    public function guardian(){
-        return $this->hasOne(Guardian::class);
+    public function guardian() {
+        return $this->belongsTo(Guardian::class);
     }
     public function rfidLogs(){
         return $this->hasMany(RfidLog::class);
@@ -27,5 +27,7 @@ class Student extends Model
     public function tag(){
         return $this->hasOne(Tag::class);
     }
-
+    public function notifications() {
+        return $this->hasMany(Notification::class);
+    }
 }

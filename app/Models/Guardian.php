@@ -14,7 +14,10 @@ class Guardian extends Model
 
 
 
-    public function student(){
-        return $this->belongsTo(Student::class);
+    public function students() {
+        return $this->hasMany(Student::class);
+    }
+    public function notifications() {
+        return $this->hasMany(Notification::class);
     }
 }

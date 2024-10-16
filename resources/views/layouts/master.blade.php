@@ -15,19 +15,26 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
+        @if(Auth::check())
             <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('students.index') }}">Students</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('guardians.index') }}">Guardians</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('logs.index') }}">Logs</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('attendances.index') }}">Attendances</a>
-                </li>
+                @if(Auth::user()->isAdmin())
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('students.index') }}">Students</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('guardians.index') }}">Guardians</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('logs.index') }}">Logs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('attendances.index') }}">Attendances</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('notifications.index') }}">Notifications</a>
+                    </li>
+                @endif
+            @endif
             </ul>
             <ul class="navbar-nav ms-auto">
                 @if(Auth::check())
