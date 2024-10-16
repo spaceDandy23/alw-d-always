@@ -11,6 +11,7 @@ use Storage;
 
 class StudentController extends Controller
 {
+
     public function register(Request $request){
 
         if($request->isMethod('post')){
@@ -45,7 +46,7 @@ class StudentController extends Controller
             ]);
 
             
-            return redirect()->route('register')->with('success', 'Student Registered');
+            return redirect()->route('register.student.parent')->with('success', 'Student Registered');
 
 
         }

@@ -34,7 +34,10 @@
                         <a class="nav-link" href="{{ route('notifications.index') }}">Notifications</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('register') }}">Register Student</a>
+                        <a class="nav-link" href="{{ route('register.student.parent') }}">Register Student</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('verify') }}">Scan</a>
                     </li>
                 @endif
             @endif

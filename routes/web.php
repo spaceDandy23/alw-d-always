@@ -4,7 +4,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\RfidLogController;
+use App\Http\Controllers\RfidController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,10 +16,15 @@ Route::get('/', function () {
 Route::middleware('prevent.back')->group(function () {
     Route::middleware(['auth'])->group(function () {
 
+
+
+
+
+        Route::match(['post', 'get'], 'verify', [RfidController::class, 'verify'])->name('verify');
         Route::post('search', [StudentController::class, 'search'])->name('search');
-        Route::match(['post', 'get'], 'register', [StudentController::class, 'register'])->name('register');
+        Route::match(['post', 'get'], 'register', [StudentController::class, 'register'])->name('register.student.parent');
         Route::post('import', [StudentController::class, 'importCSV'])->name('importCSV');
-        Route::get('logs', [RfidLogController::class, 'index'])->name('logs.index');
+        Route::get('logs', [RfidController::class, 'index'])->name('logs.index');
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
         Route::resource('students', StudentController::class);
         Route::resource('guardians', GuardianController::class);
