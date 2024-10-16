@@ -33,6 +33,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('notifications.index') }}">Notifications</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('register') }}">Register Student</a>
+                    </li>
                 @endif
             @endif
             </ul>

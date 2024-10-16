@@ -13,12 +13,15 @@ Route::get('/', function () {
 });
 
 
-Route::middleware('prevent_back_history')->group(function () {
+Route::middleware('prevent.back')->group(function () {
     Route::middleware(['auth'])->group(function () {
+
+        Route::post('search', [StudentController::class, 'search'])->name('search');
+        Route::match(['post', 'get'], 'register', [StudentController::class, 'register'])->name('register');
         Route::post('import', [StudentController::class, 'importCSV'])->name('importCSV');
         Route::get('logs', [RfidLogController::class, 'index'])->name('logs.index');
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
-        // Route::resource('students', StudentController::class);
+        Route::resource('students', StudentController::class);
         Route::resource('guardians', GuardianController::class);
         Route::get('notifications', [NotificationController::class,'index'])->name('notifications.index');
     });

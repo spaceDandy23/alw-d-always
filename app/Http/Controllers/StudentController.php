@@ -2,13 +2,86 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Guardian;
 use App\Models\Student;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use Schema;
 use Storage;
 
 class StudentController extends Controller
 {
+    public function register(Request $request){
+
+        if($request->isMethod('post')){
+            $request->validate([
+                'rfid_tag' => 'required|numeric',  
+                'first_name' => 'required|string|max:255', 
+                'last_name' => 'required|string|max:255', 
+                'grade' => 'required|integer|min:7|max:10',
+                'section' => 'required|integer|min:1|max:3',
+                
+                'guardian_first_name' => 'required|string|max:255', 
+                'guardian_last_name' => 'required|string|max:255', 
+                'relationship' => 'required|string|max:50', 
+                'phone_number' => 'nullable|string|max:15',
+            ]);
+            $student = Student::findOrFail($request->student_id);
+
+            if ($student->tag) {
+                return back()->with('error', 'The student already has an RFID tag assigned.');
+            }
+            Tag::create([
+                'rfid_tag' => $request->rfid_tag,
+                'student_id' => $student->id,
+            ]);
+
+
+            Guardian::create([
+                'name' => "{$request->guardian_last_name}, {$request->guardian_first_name}",
+                'student_id' => $student->id,
+                'relationship_to_student' => $request->input('relationship'),
+                'contact_info' => $request->input('phone_number'),
+            ]);
+
+            
+            return redirect()->route('register')->with('success', 'Student Registered');
+
+
+        }
+        return view('student.register_student');
+
+    }
+    public function search(Request $request){
+
+        $query = $request->input('search');
+
+        $columns = Schema::getColumnListing('students');
+        $studentQuery = Student::query();
+        if(ctype_digit($query)){
+            $integerQuery = intVal($query);
+            $studentQuery->where('grade', 'LIKE', $integerQuery)
+            ->orWhere('section', 'LIKE', $integerQuery);
+        }
+        else{
+            foreach($columns as $column){
+                $studentQuery->orWhere($column, 'LIKE', "%{$query}%");
+            }
+        }
+
+        if($studentQuery->get()->isEmpty()){
+            return response()->json(['success' => false]);
+        }
+
+
+        return response()->json([
+            'success' => true,
+            'results' => $studentQuery->paginate(5),
+        ]);
+
+
+
+    }
     public function importCSV(Request $request)
     {
         $directory = 'public/csv';
