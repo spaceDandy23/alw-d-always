@@ -12,7 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
         search: document.getElementById('app').getAttribute('data-search-url'),
         csrfToken: document.getElementById('app').getAttribute('data-csrf-token')
     };
-    let searchInput = '';
+    let searchStudentName = '';
+    let filterGrade = '';
+    let filterSection = '';
     form.addEventListener('keydown', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
@@ -22,10 +24,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-    document.getElementById('search_button').addEventListener('click',()=>{
+    document.getElementById('filter_button').addEventListener('click',()=>{
 
-        searchInput = document.getElementById('search_student').value;
 
+
+        searchStudentName = document.getElementById('search_student').value;
+        filterGrade = document.getElementById('filter_grade').value;
+        filterSection = document.getElementById('filter_section').value;
         fetch(routesAndToken.search, {
 
             method: "POST",
@@ -34,7 +39,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({search: searchInput})
+            body: JSON.stringify({
+                name: searchStudentName,
+                grade: filterGrade,
+                section: filterSection,
+            })
 
 
         })
@@ -44,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then((data)=> {
             renderSearchedStudents(data.results.data);
             renderClicked(data.results.data);
-            renderPaginatedLinks(data.results, searchInput);
+            renderPaginatedLinks(data.results, searchStudentName);
         });
     });
 
@@ -55,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': routesAndToken.csrfToken
             },
-            body: JSON.stringify({ search: searchInput })
+            body: JSON.stringify({ search: searchStudentName })
         })
         .then((response) => {
             return response.json();
@@ -64,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(data.success){
                 console.log(data.results);
                 renderSearchedStudents(data.results.data);
-                renderPaginatedLinks(data.results, searchInput);
+                renderPaginatedLinks(data.results, searchStudentName);
                 renderClicked(data.results.data);
             }
     

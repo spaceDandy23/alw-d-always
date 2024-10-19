@@ -29,15 +29,14 @@
                         <td>{{ $student->grade }}</td>
                         <td>{{ $student->section }}</td>
                         <td>
-                            <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editStudent{{ $student->id }}">Edit</a>
-                            <form action="{{ route('students.destroy', $student->id) }}" method="post" style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $student->id }}">
-                                    Delete
-                                </button>
-                            </form>
-                            <!-- Edit Student Modal -->
+                        <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editStudent{{ $student->id }}">Edit</a>
+
+                        <a class="btn btn-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $student->id }}">Delete</a>
+
+                        <a class="btn btn-primary" href="{{ route('student.profile', $student->id) }}">
+                            View Profile
+                        </a>
+                        <!-- Edit Student Modal -->
                             <div class="modal fade" id="editStudent{{ $student->id }}" tabindex="-1" aria-labelledby="editStudentLabel{{ $student->id }}" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">

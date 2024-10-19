@@ -10,7 +10,7 @@
             <thead>
                 @include('partials.alerts')
                 <tr>
-                    <th scope="col">Student ID</th>
+                    <th scope="col">Name</th>
                     <th scope="col">Check-In Time</th>
                     <th scope="col">Date</th>
                     <th scope="col">Status (Morning)</th>
@@ -21,7 +21,7 @@
             <tbody>
                 @foreach($attendances as $attendance)
                     <tr>
-                        <td>{{ $attendance->student_id }}</td>
+                        <td>{{ $attendance->student->name }}</td>
                         <td>{{ $attendance->check_in_time }}</td>
                         <td>{{ $attendance->date }}</td>
                         <td>{{ $attendance->status_morning }}</td>
@@ -42,13 +42,13 @@
                                                 @method('PUT')
                                                 <label for="status_morning_{{ $attendance->id }}" class="form-label">Status (Morning)</label>
                                                 <select class="form-select" id="status_morning_{{ $attendance->id }}" name="status_morning">
-                                                    <option value="Present" {{ $attendance->status_morning == 'Present' ? 'selected' : '' }}>Present</option>
-                                                    <option value="Absent" {{ $attendance->status_morning == 'Absent' ? 'selected' : '' }}>Absent</option>
+                                                    <option value="present" {{ $attendance->status_morning == 'present' ? 'selected' : '' }}>Present</option>
+                                                    <option value="absent" {{ $attendance->status_morning == 'absent' ? 'selected' : '' }}>Absent</option>
                                                 </select>
                                                 <label for="status_lunch_{{ $attendance->id }}" class="form-label">Status (Lunch)</label>
                                                 <select class="form-select" id="status_lunch_{{ $attendance->id }}" name="status_lunch">
-                                                    <option value="Present" {{ $attendance->status_lunch == 'Present' ? 'selected' : '' }}>Present</option>
-                                                    <option value="Absent" {{ $attendance->status_lunch == 'Absent' ? 'selected' : '' }}>Absent</option>
+                                                    <option value="present" {{ $attendance->status_lunch == 'present' ? 'selected' : '' }}>Present</option>
+                                                    <option value="absent" {{ $attendance->status_lunch == 'absent' ? 'selected' : '' }}>Absent</option>
                                                 </select>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

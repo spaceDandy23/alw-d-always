@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
 use App\Models\Guardian;
 use App\Models\Student;
 use App\Models\Tag;
@@ -55,29 +56,28 @@ class StudentController extends Controller
     }
     public function search(Request $request){
 
-        $query = $request->input('search');
-
-        $columns = Schema::getColumnListing('students');
-        $studentQuery = Student::query();
-        if(ctype_digit($query)){
-            $integerQuery = intVal($query);
-            $studentQuery->where('grade', 'LIKE', $integerQuery)
-            ->orWhere('section', 'LIKE', $integerQuery);
+        $name = $request->input('name');
+        $grade = $request->input('grade');
+        $section = $request->input('section');
+        $query = Student::query();
+        if ($name) {
+            $query->where('name', 'LIKE', "%{$name}%"); 
         }
-        else{
-            foreach($columns as $column){
-                $studentQuery->orWhere($column, 'LIKE', "%{$query}%");
-            }
+    
+        if ($grade) {
+            $query->where('grade', $grade);
         }
-
-        if($studentQuery->get()->isEmpty()){
-            return response()->json(['success' => false]);
+    
+        if ($section) {
+            $query->where('section', $section);
         }
+    
+        $studentQuery = $query->paginate(2);
 
 
         return response()->json([
             'success' => true,
-            'results' => $studentQuery->paginate(5),
+            'results' => $studentQuery,
         ]);
 
 
@@ -106,6 +106,29 @@ class StudentController extends Controller
         
         return back()->with('success', 'Students added successfully!');
         
+    }
+    public function profile(Student $student){
+
+        $attendanceRecords = Attendance::where('student_id', $student->id)
+        ->orderBy('date', 'DESC')
+        ->get();
+
+
+        $totalPresentMorning = $attendanceRecords->where('status_morning', 'present')->count();
+        $totalPresentAfternoon = $attendanceRecords->where('status_lunch', 'present')->count();
+
+        $totalAbsentMorning = $attendanceRecords->where('status_morning', 'absent')->count();
+        $totalAbsentAfternoon = $attendanceRecords->where('status_lunch', 'absent')->count();
+        
+        $totalAbsent = ($totalAbsentMorning * 0.5) + ($totalAbsentAfternoon * 0.5);
+        $totalDays = $attendanceRecords->count();
+
+        $attendancePercentageMorning = $totalDays > 0 ? ($totalPresentMorning / $totalDays) * 100 : 0;
+        $attendancePercentageAfternoon = $totalDays > 0 ? ($totalPresentAfternoon / $totalDays) * 100 : 0;
+
+        return view('student.student_profile', compact('student','totalPresentMorning','totalPresentAfternoon',
+        'totalAbsent', 'attendancePercentageMorning', 'attendancePercentageAfternoon','attendanceRecords'));
+
     }
 
     /**

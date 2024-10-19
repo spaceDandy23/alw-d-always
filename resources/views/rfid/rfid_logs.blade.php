@@ -21,7 +21,7 @@
             <tbody>
                 @foreach($rfidLogs as $log)
                     <tr>
-                        <td>{{ $log->student_id }}</td>
+                        <td>{{ $log->student->name }}</td>
                         <td>{{ $log->check_in_time }}</td>
                         <td>{{ $log->date}}</td>
                     </tr>

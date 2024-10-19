@@ -27,13 +27,8 @@
                         <td>{{ $guardian->contact_info }}</td>
                         <td>
                             <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editGuardian{{ $guardian->id }}">Edit</a>
-                            <form action="{{ route('guardians.destroy', $guardian->id) }}" method="post" style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $guardian->id }}">
-                                    Delete
-                                </button>
-                            </form>
+                            <a class="btn btn-danger" href ="#" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $guardian->id }}">Delete</a>
+
                             <!-- Edit Guardian Modal -->
                             <div class="modal fade" id="editGuardian{{ $guardian->id }}" tabindex="-1" aria-labelledby="editGuardianLabel{{ $guardian->id }}" aria-hidden="true">
                                 <div class="modal-dialog">

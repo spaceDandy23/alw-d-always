@@ -11,27 +11,27 @@
     }
 </style> -->
 
+<div class="row justify-content-center">
+    <div class='card col-8'>
+        <div class='card-body' id="card_body">
+            @include('partials.csrf_and_routes')
+            <div id="alert_notif">
 
-<div class='card'>
-    <div class='card-body' id="card_body">
-        @include('partials.csrf_and_routes')
-        <div id="alert_notif">
+            </div>
+            <h5 class='card-title'>Student Details</h5>
+            <p class='card-text'>Name: <span id="name"></span></p>
+            <p class='card-text'>Grade: <span id="grade"></span></p>
+            <p class='card-text'>Section: <span id="section"></span></p>
 
+            <form id='tag_form'>
+                @csrf
+                <label for='rfid_field' class='form-label'>RFID Tag</label>
+                <input id='rfid_field' type='number' name='rfid_tag' class='form-control mb-2'>
+                <button class='btn btn-primary' type='submit'>Verify</button>
+            </form>
         </div>
-        <h5 class='card-title'>Student Details</h5>
-        <p class='card-text'>Name: <span id="name"></span></p>
-        <p class='card-text'>Grade: <span id="grade"></span></p>
-        <p class='card-text'>Section: <span id="section"></span></p>
-
-        <form id='tag_form'>
-            @csrf
-            <label for='rfid_field' class='form-label'>RFID Tag</label>
-            <input id='rfid_field' type='number' name='rfid_tag' class='form-control mb-2'>
-            <button class='btn btn-primary' type='submit'>Verify</button>
-        </form>
     </div>
 </div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('rfid_field').focus();
@@ -63,7 +63,7 @@
             })
             .then((data) => {
                 if(data.success){
-
+                    console.log(data.students);
                     console.log(data.message);
                     showStudentVerified(data);
                 }
