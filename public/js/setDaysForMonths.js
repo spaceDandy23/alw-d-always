@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return new Date(year, month, 0).getDate();
     }
 
-
+    console.log('aguy');
     
 
     function updateDays(monthSelect, daySelect) {

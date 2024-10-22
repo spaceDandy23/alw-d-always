@@ -18,6 +18,43 @@ class RfidController extends Controller
         $rfidLogs = RfidLog::paginate(20);
         return view('rfid.rfid_logs', compact('rfidLogs'));
     }
+    public function search(Request $request){
+        
+        $request->validate([        
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            ]);
+
+
+
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $name = $request->input('name');
+        $grade = $request->input('grade');
+        $section = $request->input('section');
+
+
+        $rfidLogs = RfidLog::join('students', 'rfid_logs.student_id', '=', 'students.id')
+        ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
+            return $q->whereBetween('date', [$startDate, $endDate]);
+        })
+        ->when($grade, function($q, $grade){
+            return  $q->where('students.grade', $grade);
+        })
+        ->when($name, function($q, $name){
+            return  $q->where('students.name','LIKE', "%{$name}%");
+        })
+        ->when($section, function($q, $section){
+            return  $q->where('students.section', $section);
+        })
+        ->orderBy('students.name','asc')
+        ->orderBy('rfid_logs.date','asc')
+        ->paginate(5)
+        ->appends($request->all());
+        return view('rfid.rfid_logs', compact('rfidLogs'));
+
+
+    }
 
     public function verify(Request $request){
 

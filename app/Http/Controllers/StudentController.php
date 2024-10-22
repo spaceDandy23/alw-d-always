@@ -7,6 +7,7 @@ use App\Models\Guardian;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\Tag;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Schema;
 use Storage;
@@ -185,14 +186,28 @@ class StudentController extends Controller
     public function filterStudentAttendance(Request $request, Student $student){
 
         $request->validate([
-            'start_date' => 'required',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
+
+
+        // $startYear = Carbon::parse($request->input('start_date'))->format('Y');
+        // $endYear = Carbon::parse($request->input('end_date'))->format('Y');
+
+        // $yearRange = "{$startYear}-{$endYear}";
+        // //ask maam kung anong day nag eend ang school year
+        // if($student->schoolYear->year != $yearRange ){
+        //     return redirect()->back()->with('error', 'The selected school year does not match the student\'s school year.');
+
+        // }
+
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         
         $attendanceRecords = Attendance::where('student_id', $student->id)
-        ->whereBetween('date', [$startDate, $endDate])
+        ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
+            return $q->whereBetween('date', [$startDate, $endDate]);
+        })
         ->orderBy('date', 'asc')
         ->paginate(20)
         ->appends($request->all());
@@ -242,7 +257,7 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $students = Student::paginate(10);
+        $students = Student::paginate(11);
         $schoolYears = SchoolYear::all();
 
         return view('students.students_list', compact('students', 'schoolYears'));
@@ -263,7 +278,7 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'rfid_tag' => 'required|string|unique:tags,rfid_tag',
+            'rfid_tag' => 'required|string',
             'name' => 'required|string|max:255',
             'grade' => 'required|integer|min:7|max:10',
             'section' => 'required|integer|min:1|max:3',
@@ -305,7 +320,7 @@ class StudentController extends Controller
     public function update(Request $request, Student $student)
     {
         $request->validate([
-            'rfid_tag' => 'required|string|unique:tags,rfid_tag,' . ($student->tag ? $student->tag->id : ''),
+            'rfid_tag' => 'required|string',
             'name' => 'required|string|max:255',
             'grade' => 'required|integer|min:7|max:10',
             'section' => 'required|integer|min:1|max:3',

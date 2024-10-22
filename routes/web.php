@@ -19,9 +19,17 @@ Route::middleware('prevent.back')->group(function () {
         Route::post('search', [StudentController::class, 'search'])->name('search');
         Route::match(['post', 'get'], 'register', [StudentController::class, 'register'])->name('register.student.parent');
         Route::post('import', [StudentController::class, 'importCSV'])->name('importCSV');
+
+        Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.filter');
+
+        Route::get('logs/filter', [RfidController::class, 'search'])->name('logs.filter');
         Route::get('logs', [RfidController::class, 'index'])->name('logs.index');
+        
+        
+
+
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
-        Route::get('report/filter', [AttendanceController::class, 'filterAttendance'])->name('attendances.filter');
+        Route::get('report/filter', [AttendanceController::class, 'filterAttendance'])->name('attendances.reports.filter');
         Route::get('report', [AttendanceController::class, 'reports'])->name('attendances.reports');
         
 
@@ -37,9 +45,9 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('student/{student}/filter', [StudentController::class,'filterStudentAttendance'])->name('student.filter');
 
 
-
-
+        Route::get('guardians/filter', [GuardianController::class, 'search'])->name('guardians.filter');
         Route::resource('guardians', GuardianController::class);
+
         Route::get('notifications', [NotificationController::class,'index'])->name('notifications.index');
     });
     Route::match(['post', 'get'], 'verify', [RfidController::class, 'verify'])->name('verify');

@@ -15,6 +15,7 @@
                         <p><strong>Grade:</strong> {{ $student->grade }}</p>
                         <p><strong>Section:</strong> {{ $student->section }}</p>
                         <p><strong>RFID Tag:</strong> {{ $student->tag->rfid_tag }}</p>
+                        <p><strong>School Year:</strong> {{ $student->schoolYear->year }}</p>
                     </div>
                     <h3>Attendance Summary</h3>
                     <div class="attendance-summary mb-3">

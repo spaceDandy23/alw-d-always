@@ -20,12 +20,11 @@
                         <label for="filter_grade" class="form-label">Grade</label>
                     </div>
                     <div class="col">
-                        <select id="filter_grade" class="form-select">
+                        <select class="form-select" id="filter_grade" name="grade">
                             <option value="">-- Select Grade --</option>
-                            <option value="7">Grade 7</option>
-                            <option value="8">Grade 8</option>
-                            <option value="9">Grade 9</option>
-                            <option value="10">Grade 10</option>
+                            @for($i = 7; $i <= 12; $i++)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
                         </select>
                     </div>
 
@@ -33,12 +32,12 @@
                         <label for="filter_section" class="form-label">Section</label>
                     </div>
                     <div class="col">
-                        <select id="filter_section" class="form-select">
-                            <option value="">-- Select Section --</option>
-                            <option value="1">Section 1</option>
-                            <option value="2">Section 2</option>
-                            <option value="3">Section 3</option>
-                        </select>
+                    <select class="form-select" id="filter_section" name="filter_section">
+                        <option value="">-- Select Grade --</option>
+                        @for($i = 1; $i <= 3; $i++)
+                            <option value="{{ $i }}">{{ $i }}</option>
+                        @endfor
+                    </select>
                     </div>
                     <div class="col-auto">
                         <label for="search_student" class="form-label">Student Name</label>

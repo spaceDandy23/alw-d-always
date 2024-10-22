@@ -5,10 +5,43 @@
 @section('content')
 
 <div class="row justify-content-center">
-    <div class="col-10">
+    <div class="col">
         <div class="d-flex justify-content-center mb-2">
             <a href="#" class="btn btn-primary mx-4" data-bs-toggle="modal" data-bs-target="#createGuardian">Add Guardian</a>
         </div>
+        <div class="p-4">
+            <form action="{{ route('guardians.filter') }}" method="GET" class="mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label for="guardian_name" class="form-label">Guardian Name</label>
+                    </div>
+                    <div class="col">
+                        <input type="text" name="guardian_name" id="guardian_name" class="form-control" placeholder="Enter Guardian Name">
+                    </div>
+                    <div class="col-auto">
+                        <label for="relationship" class="form-label">Relationship</label>
+                    </div>
+                    <div class="col">
+                    <select id="relationship" class="form-select" name="relationship">
+                        <option value="">-- Select Relationship --</option>
+                        @foreach ($relationships as $relationship )
+                            <option value="{{$relationship}}">{{$relationship}}</option>
+                        @endforeach
+                    </select>
+                    </div>
+                    <div class="col-auto">
+                        <label for="phone_number_filter" class="form-label">Phone Number</label>                                              
+                    </div>
+                    <div class="col">
+                        <input type="text" name="phone_number" id="phone_number_filter" class="form-control" placeholder="Enter Phone Number">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary" type="submit">Filter</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         <table class="table table-striped">
             <thead>
                 @include('partials.alerts')
@@ -44,7 +77,12 @@
                                                 <label for="name_{{ $guardian->id }}" class="form-label">Name</label>
                                                 <input type="text" class="form-control" id="name_{{ $guardian->id }}" name="name" value="{{ $guardian->name }}">
                                                 <label for="relationship_{{ $guardian->id }}" class="form-label">Relationship</label>
-                                                <input type="text" class="form-control" id="relationship_{{ $guardian->id }}" name="relationship" value="{{ $guardian->relationship_to_student }}">
+                                                    <select id="relationship_{{ $guardian->id }}" class="form-select" name="relationship">
+                                                        <option value="">-- Select Relationship --</option>
+                                                        @foreach ($relationships as $relationship )
+                                                            <option value="{{$relationship}}" {{ $guardian->relationship_to_student == $relationship ? 'selected' : '' }}>{{$relationship}}</option>
+                                                        @endforeach
+                                                    </select>
                                                 <label for="phone_number_{{ $guardian->id }}" class="form-label">Phone Number</label>
                                                 <input type="text" class="form-control" id="phone_number_{{ $guardian->id }}" name="phone_number" value="{{ $guardian->contact_info }}">
                                                 <div class="modal-footer">
@@ -102,7 +140,12 @@
                     <label for="name" class="form-label">Name</label>
                     <input type="text" class="form-control" id="name" name="name">
                     <label for="relationship" class="form-label">Relationship</label>
-                    <input type="text" class="form-control" id="relationship" name="relationship">
+                    <select id="relationship" class="form-select" name="relationship">
+                        <option value="">-- Select Relationship --</option>
+                        @foreach ($relationships as $relationship )
+                            <option value="{{$relationship}}">{{$relationship}}</option>
+                        @endforeach
+                    </select>
                     <label for="phone_number" class="form-label">Phone Number</label>
                     <input type="text" class="form-control" id="phone_number" name="phone_number">
                     <div class="modal-footer">

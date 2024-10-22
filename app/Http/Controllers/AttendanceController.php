@@ -16,6 +16,46 @@ class AttendanceController extends Controller
         return view('attendances.attendances_list', compact('attendances'));
         
     }
+    public function search(Request $request){
+        $request->validate([        
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            ]);
+
+
+
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $name = $request->input('name');
+        $grade = $request->input('grade');
+        $section = $request->input('section');
+
+
+        $attendances = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
+        ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
+            return $q->whereBetween('date', [$startDate, $endDate]);
+        })
+    
+        ->when($grade, function($q, $grade){
+            return  $q->where('students.grade', $grade);
+        })
+        ->when($name, function($q, $name){
+            return  $q->where('students.name','LIKE', "%{$name}%");
+        })
+        ->when($section, function($q, $section){
+            return  $q->where('students.section', $section);
+        })
+        ->orderBy('students.name','asc')
+        ->orderBy('attendances.date','asc')
+        ->paginate(5)
+        ->appends($request->all());
+
+        return view('attendances.attendances_list', compact('attendances'));
+
+
+
+
+    }
     public function update(Request $request, Attendance $student){
 
         $student->update([
@@ -37,37 +77,37 @@ class AttendanceController extends Controller
     }
     public function filterAttendance(Request $request)
     {
+        
+        $request->validate([        
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            ]);
 
-        $startMonth = intval($request->input('start_month'));
-        $endMonth = intval($request->input('end_month'));
-        $startDay = intval($request->input('start_day'));
-        $endDay = intval($request->input('end_day'));
 
-        if($startMonth > $endMonth){
-            return redirect()->back()->with('error', 'End month should be after the start month');
-        }
 
-        $startMonthDay = sprintf('%02d-%02d', $startMonth, $startDay);
-        $endMonthDay = sprintf('%02d-%02d', $endMonth, $endDay);
-
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $name = $request->input('name');
         $grade = $request->input('grade');
         $section = $request->input('section');
-        $schoolYearId = $request->input('school_year');
+
 
         
         $attendanceRecords = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
-        ->whereRaw("DATE_FORMAT(date, '%m-%d') BETWEEN '{$startMonthDay}' AND '{$endMonthDay}'")
+        ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
+            return $q->whereBetween('date', [$startDate, $endDate]);
+        })
         ->when($grade, function($q, $grade){
             return  $q->where('students.grade', $grade);
         })
         ->when($section, function($q, $section){
             return  $q->where('students.section', $section);
         })
-        ->when($schoolYearId, function ($q, $schoolYearId){
-            return $q->where('students.school_year_id', $schoolYearId);
+        ->when($name, function($q, $name){
+            return  $q->where('students.name', 'LIKE', "%{$name}%");
         })
         ->orderBy('students.name','asc')
-        ->orderBy('attendances.date','asc')
+        ->orderByRaw("DATE_FORMAT(date, '%m-%d') ASC")
         ->get()
         ->map(function ($attendance){
             $attendance->date = Carbon::parse($attendance->date)->format('m/d');
@@ -94,7 +134,7 @@ class AttendanceController extends Controller
         });
 
         
-       $startDateEndDate = "{$startMonthDay} - {$endMonthDay}";
+       $startDateEndDate = "{$startDate} - {$endDate}";
        $schoolYears = SchoolYear::all();
 
         return view('reports.reports', compact('attendanceRecords','studentsTotalAbsents','startDateEndDate','schoolYears'))->with('success', 'Filtered Successfully');

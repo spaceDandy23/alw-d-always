@@ -4,80 +4,61 @@
 
 @section('content')
 <div class="row justify-content-center"> 
-    <div class="card col-6 px-0">
-        <div class="card-header text-center">
+    <div class="col">
+        <div class="text-center">
             <h3>Filter</h3>
         </div>
-        <div class="card-body">
-            @include('partials.alerts')
-            <div class="p-4">
-                <form action="{{ route('attendances.filter') }}" method="GET" class="mb-4">
-                    <div class="row g-3 align-items-center">
-                        <div class="col-md-6 mb-3">
-                            <label for="start_month" class="form-label">Start Month</label>
-                            <select class="form-select" id="start_month" name="start_month">
-                                <option value="">-- Select Month --</option>
-                                @for ($month = 1; $month <= 12; $month++)
-                                    <option value="{{ $month }}">{{ date('F', mktime(0, 0, 0, $month, 1)) }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="start_day" class="form-label">Start Day</label>
-                            <select class="form-select" id="start_day" name="start_day">
-                                <option value="">-- Select Day --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="end_month" class="form-label">End Month</label>
-                            <select class="form-select" id="end_month" name="end_month">
-                                <option value="">-- Select Month --</option>
-                                @for ($month = 1; $month <= 12; $month++)
-                                    <option value="{{ $month }}">{{ date('F', mktime(0, 0, 0, $month, 1)) }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="end_day" class="form-label">End Day</label>
-                            <select class="form-select" id="end_day" name="end_day">
-                                <option value="">-- Select Day --</option>
-                            </select>
-                        </div>
+        @include('partials.alerts')
+        <div class="p-4">
+            <form action="{{ route('attendances.reports.filter') }}" method="GET" class="mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label for="name" class="form-label">Student Name</label>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="grade" class="form-label">Grade</label>
-                            <select class="form-select" id="grade" name="grade">
-                                <option value="">-- Select Grade --</option>
-                                <option value="7">Grade 7</option>
-                                <option value="8">Grade 8</option>
-                                <option value="9">Grade 9</option>
-                                <option value="10">Grade 10</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="section" class="form-label">Section</label>
-                            <select class="form-select" id="section" name="section">
-                                <option value="">-- Select Section --</option>
-                                <option value="1">Section 1</option>
-                                <option value="2">Section 2</option>
-                                <option value="3">Section 3</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="school_year" class="form-label">School Year</label>
-                            <select class="form-select" id="school_year" name="school_year">
-                                <option value="">-- Select School Year --</option>
-                                @foreach ($schoolYears as $schoolYear )
-                                    <option value={{ $schoolYear->id }}>{{ $schoolYear->year }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
+                    <div class="col">
+                        <input type="text" name="name" id="name" class="form-control" placeholder="Enter Student Name">
                     </div>
-                    <button type="submit" class="btn btn-primary">Filter</button>
-                </form>
-            </div>
+                    <div class="col-auto">
+                        <label for="grade" class="form-label">Grade</label>
+                    </div>
+                    <div class="col">
+                        <select class="form-select" id="grade" name="grade">
+                            <option value="">-- Select Grade --</option>
+                            @for($i = 7; $i <= 12; $i++)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label for="filter_section" class="form-label">Section</label>                                              
+                    </div>
+                    <div class="col">
+                        <select id="filter_section" class="form-select" name="section">
+                            <option value="">-- Select Section --</option>
+                            @for($i = 1; $i <= 3; $i++)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                        </select>  
+                    </div>
+                </div>
+                <div class="row g-3 mt-2 align-items-center">
+                    <div class="col-auto">
+                        <label for="start_date" class="form-label">Start Date</label>
+                    </div>
+                    <div class="col">
+                        <input id="start_date" type="date" name="start_date" class="form-control">
+                    </div>
+                    <div class="col-auto">
+                        <label for="end_date" class="form-label">End Date</label>
+                    </div>
+                    <div class="col">
+                        <input id="end_date" type="date" name="end_date" class="form-control">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary" type="submit">Filter</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
     @if(isset($studentsTotalAbsents))
@@ -138,6 +119,6 @@
         <p class="mt-3">No records found for the selected filters.</p>
     @endif
 </div>
-<script src="{{ asset('js/setDaysForMonths.js') }}" type="module"></script>
+
 
 @endsection
