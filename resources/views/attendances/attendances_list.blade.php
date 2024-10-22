@@ -11,7 +11,6 @@
                 @include('partials.alerts')
                 <tr>
                     <th scope="col">Name</th>
-                    <th scope="col">Check-In Time</th>
                     <th scope="col">Date</th>
                     <th scope="col">Status (Morning)</th>
                     <th scope="col">Status (Lunch)</th>
@@ -21,8 +20,7 @@
             <tbody>
                 @foreach($attendances as $attendance)
                     <tr>
-                        <td>{{ $attendance->student->name }}</td>
-                        <td>{{ $attendance->check_in_time }}</td>
+                        <td>{{ $attendance->student->name  }}</td>
                         <td>{{ $attendance->date }}</td>
                         <td>{{ $attendance->status_morning }}</td>
                         <td>{{ $attendance->status_lunch }}</td>

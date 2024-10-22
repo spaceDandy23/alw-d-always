@@ -16,7 +16,6 @@
                         <p><strong>Section:</strong> {{ $student->section }}</p>
                         <p><strong>RFID Tag:</strong> {{ $student->tag->rfid_tag }}</p>
                     </div>
-
                     <h3>Attendance Summary</h3>
                     <div class="attendance-summary mb-3">
                         <p><strong>Total Days Present (Morning):</strong> {{ $totalPresentMorning }}</p>
@@ -25,13 +24,28 @@
                         <p><strong>Morning Attendance Percentage:</strong> {{ $attendancePercentageMorning }}%</p>
                         <p><strong>Afternoon Attendance Percentage:</strong> {{ $attendancePercentageAfternoon }}%</p>
                     </div>
+                    <div class="p-4">
+                        <form action="{{ route('student.filter', $student->id) }}" method="GET" class="mb-4">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="start_date" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" name="start_date" value="{{ request('start_date') }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="end_date" class="form-label">End Date</label>   
+                                    <input type="date" class="form-control" name="end_date" value="{{ request('end_date') }}">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </form>
+                    </div>
 
+                    @if(isset($attendanceRecords))
                     <h3>Attendance Logs</h3>
                     <table class="table table-bordered">
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Time-In</th>
                                 <th>Morning Status</th>
                                 <th>Afternoon Status</th>
                                 <th>Actions</th>
@@ -41,12 +55,10 @@
                             @foreach($attendanceRecords as $record)
                                 <tr>
                                     <td>{{ $record->date }}</td>
-                                    <td>{{ $record->check_in_time ?? 'No Tap' }}</td>
                                     <td>{{ $record->status_morning }}</td>
                                     <td>{{ $record->status_lunch }}</td>
                                     <td>
                                         <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editAttendance{{ $record->id }}">Edit</a>
-                                        <!-- Edit Attendance Modal -->
                                         <div class="modal fade" id="editAttendance{{ $record->id }}" tabindex="-1" aria-labelledby="editAttendanceLabel{{ $record->id }}" aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
@@ -88,7 +100,11 @@
                             @endforeach
                         </tbody>
                     </table>
+                    <div class="d-flex justify-content-center">
+                        {{ $attendanceRecords->links('vendor.pagination.bootstrap-5') }}
+                    </div>
                 </div>
+                @endif
                 <!-- <div class="card-footer text-center">
                     <a class="btn btn-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $student->id }}">Delete</a>
                 </div> -->

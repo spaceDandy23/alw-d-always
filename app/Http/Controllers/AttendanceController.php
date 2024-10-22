@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
+use App\Models\SchoolYear;
 use App\Models\Student;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
@@ -29,38 +31,74 @@ class AttendanceController extends Controller
 
     }
     public function reports(){
-
-        return view('reports.reports');
-
-
+        $schoolYears = SchoolYear::all();
+        return view('reports.reports', compact('schoolYears'));
         
     }
     public function filterAttendance(Request $request)
     {
-        $request->validate([
-            'start_day' => 'required',
-            'start_month' => 'required',
-            'end_day' => 'required',
-            'end_month' => 'required',
-            'grade' => 'nullable',
-            'section' => 'nullable',
-        ]);
-        $startDate = sprintf('%04d-%02d-%02d', date('Y'), $request->start_month, $request->start_day);
-        $endDate = sprintf('%04d-%02d-%02d', date('Y'), $request->end_month, $request->end_day);
-        $attendanceRecords = Attendance::query()
-        ->when($request->input('grade'), function ($query) use ($request) {
-            $query->whereHas('student', function ($q) use ($request) {
-                $q->where('grade', $request->grade);
-            });
+
+        $startMonth = intval($request->input('start_month'));
+        $endMonth = intval($request->input('end_month'));
+        $startDay = intval($request->input('start_day'));
+        $endDay = intval($request->input('end_day'));
+
+        if($startMonth > $endMonth){
+            return redirect()->back()->with('error', 'End month should be after the start month');
+        }
+
+        $startMonthDay = sprintf('%02d-%02d', $startMonth, $startDay);
+        $endMonthDay = sprintf('%02d-%02d', $endMonth, $endDay);
+
+        $grade = $request->input('grade');
+        $section = $request->input('section');
+        $schoolYearId = $request->input('school_year');
+
+        
+        $attendanceRecords = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
+        ->whereRaw("DATE_FORMAT(date, '%m-%d') BETWEEN '{$startMonthDay}' AND '{$endMonthDay}'")
+        ->when($grade, function($q, $grade){
+            return  $q->where('students.grade', $grade);
         })
-        ->when($request->input('section'), function ($query) use ($request) {
-            $query->whereHas('student', function ($q) use ($request) {
-                $q->where('section', $request->section);
-            });
+        ->when($section, function($q, $section){
+            return  $q->where('students.section', $section);
         })
-        ->orderBy(Student::select('grade')->whereColumn('students.id', 'attendances.student_id'), 'ASC')
-        ->get();
-    
-        return view('reports.reports', compact('attendanceRecords'));
+        ->when($schoolYearId, function ($q, $schoolYearId){
+            return $q->where('students.school_year_id', $schoolYearId);
+        })
+        ->orderBy('students.name','asc')
+        ->orderBy('attendances.date','asc')
+        ->get()
+        ->map(function ($attendance){
+            $attendance->date = Carbon::parse($attendance->date)->format('m/d');
+            $totalAbsences = 0;
+        
+
+            if ($attendance->status_morning == 'absent') {
+                $totalAbsences += 0.5; 
+            }
+        
+            if ($attendance->status_lunch == 'absent') {
+                $totalAbsences += 0.5; 
+            }
+        
+            $attendance->total_absences = $totalAbsences;
+            return $attendance;
+        });
+
+        $studentsTotalAbsents = $attendanceRecords->groupBy('student_id')->map(function ($records, $studentId) {
+            return [
+                'student' => Student::where('id', $studentId)->first(),
+                'total_absences' => $records->sum('total_absences'),
+            ];
+        });
+
+        
+       $startDateEndDate = "{$startMonthDay} - {$endMonthDay}";
+       $schoolYears = SchoolYear::all();
+
+        return view('reports.reports', compact('attendanceRecords','studentsTotalAbsents','startDateEndDate','schoolYears'))->with('success', 'Filtered Successfully');
+        
     }
+
 }

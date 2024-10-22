@@ -14,9 +14,10 @@ Artisan::command('say:hello', function () {
 })->purpose('Say hello');
 
 
-Schedule::command('app:store-morning-attendance')->everyFiveSeconds()->when(function (){
-    return now()->format('H') >= 12;
-});
-Schedule::command('app:store-afternoon-attendance')->everyFifteenSeconds()->when(function (){
-    return now()->format('H') >= 5;
-});
+// Schedule::command('app:store-morning-attendance')->everyFiveSeconds()->when(function (){
+//     return now()->format('H') >= 12;
+// });
+// Schedule::command('app:store-afternoon-attendance')->everyFifteenSeconds()->when(function (){
+//     return now()->format('H') >= 5;
+// });
+

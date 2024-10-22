@@ -13,7 +13,6 @@
             @include('partials.alerts')
             @include('partials.csrf_and_routes')
 
-            <!-- Filter Section -->
             <div class="p-4 mt-4">
                 <h5>Filter Students</h5>
                 <div class="row g-3 align-items-center">

@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('filter_button').addEventListener('click',()=>{
 
 
-
+        let fromRegister = true;
         searchStudentName = document.getElementById('search_student').value;
         filterGrade = document.getElementById('filter_grade').value;
         filterSection = document.getElementById('filter_section').value;
@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 name: searchStudentName,
                 grade: filterGrade,
                 section: filterSection,
+                fromRegister: fromRegister,
             })
 
 
@@ -64,7 +65,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': routesAndToken.csrfToken
             },
-            body: JSON.stringify({ search: searchStudentName })
+            body: JSON.stringify({ 
+                search: searchStudentName,
+                fromRegister: true,
+             })
         })
         .then((response) => {
             return response.json();

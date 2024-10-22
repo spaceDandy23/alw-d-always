@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Guardian;
+use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\Tag;
 use Illuminate\Http\Request;
@@ -51,94 +52,200 @@ class StudentController extends Controller
 
 
         }
-        return view('student.register_student');
+        return view('students.register_student');
 
     }
     public function search(Request $request){
 
-        $name = $request->input('name');
-        $grade = $request->input('grade');
-        $section = $request->input('section');
-        $query = Student::query();
-        if ($name) {
-            $query->where('name', 'LIKE', "%{$name}%"); 
-        }
-    
-        if ($grade) {
-            $query->where('grade', $grade);
-        }
-    
-        if ($section) {
-            $query->where('section', $section);
-        }
-    
-        $studentQuery = $query->paginate(2);
 
 
-        return response()->json([
-            'success' => true,
-            'results' => $studentQuery,
-        ]);
+        if($request->input('fromRegister')){
+            $name = $request->input('name');
+            $grade = $request->input('grade');
+            $section = $request->input('section');
+            $activeSchoolYear = SchoolYear::where('is_active', true)->first();
+            $query = Student::query();
+            $query->where('school_year_id', $activeSchoolYear->id);
+
+
+            if ($name) {
+                $query->where('name', 'LIKE', "%{$name}%"); 
+            }
+            if ($grade) {
+                $query->where('grade', $grade);
+            }
+        
+            if ($section) {
+                $query->where('section', $section);
+            }
+        
+            $studentQuery = $query->paginate(10);
+
+
+            return response()->json([
+                'success' => true,
+                'results' => $studentQuery,
+            ]);
+        }
+
+        if($request->isMethod('get')){
+            $name = $request->input('name');
+            $grade = $request->input('grade');
+            $section = $request->input('section');
+            $schoolYear = $request->input('school_year');
+
+            $students = Student::query()
+            ->when($name,function($q, $name){
+                return $q->where('name', 'LIKE', "%{$name}%");
+            })
+            ->when($grade, function($q, $grade){
+                return $q->where('grade', $grade);
+            })
+            ->when($section, function($q, $section){
+                return $q->where('section', $section);
+            })
+            ->when($schoolYear, function($q, $schoolYear){
+                return $q->where('school_year_id',  $schoolYear);
+            })
+            ->paginate(5)
+            ->appends($request->all());
+            $schoolYears = SchoolYear::all();
+            return view('students.students_list', compact('students','schoolYears'));
+
+        }
+
 
 
 
     }
     public function importCSV(Request $request)
     {
+
+        $request->validate([
+            'csv_file' => 'required|file',
+            'school_year' => 'required'
+        ]);
+
+        SchoolYear::where('is_active', true)->update(['is_active' => false]);
+
         $directory = 'public/csv';
         if (!Storage::exists($directory)) {
             Storage::makeDirectory($directory);  
         }
+        $schoolYear = $request->input('school_year');
+
+        $schoolYearRecord = SchoolYear::updateOrCreate(
+            ['year' => $schoolYear],
+            ['is_active' => true]
         
+        );
+
+
+
         $file = $request->file('csv_file');
         $path = $file->storeAs('public/csv', $file->getClientOriginalName());
-        if (($handle = fopen(Storage::path($path), 'r')) !== false) {
-            fgetcsv($handle); 
-            while (($data = fgetcsv($handle)) !== false) {
-                Student::create([
-                    'name' => "{$data[0]}, {$data[1]}", 
-                    'grade' => intval($data[2]), 
-                    'section' => intval($data[3]), 
-                ]);
+
+
+        $existingStudents = Student::where('school_year_id', $schoolYearRecord->id)->get();
+
+
+        if($existingStudents->isEmpty()){
+            if (($handle = fopen(Storage::path($path), 'r')) !== false) {
+                fgetcsv($handle); 
+                while (($data = fgetcsv($handle)) !== false) {
+                    if ($existingStudents->isEmpty()) {
+                        Student::create([
+                            'name' => "{$data[0]}, {$data[1]}", 
+                            'grade' => intval($data[2]),
+                            'section' => intval($data[3]),
+                            'school_year_id' => $schoolYearRecord->id,
+                        ]);
+                    }
+                }
+                fclose($handle);
             }
-            fclose($handle);
+            return back()->with('success', 'Students added successfully!');
         }
-        
         return back()->with('success', 'Students added successfully!');
-        
     }
     public function profile(Student $student){
 
         $attendanceRecords = Attendance::where('student_id', $student->id)
-        ->orderBy('date', 'DESC')
-        ->get();
+        ->orderBy('date', 'asc')
+        ->paginate(20);
+    
+        $attendanceData = $this->calculateAttendanceData($student);
+        return view('students.student_profile', array_merge($attendanceData, [
+            'student' => $student,
+            'attendanceRecords' => $attendanceRecords,
+        ]));
+    
+
+    }
+    public function filterStudentAttendance(Request $request, Student $student){
+
+        $request->validate([
+            'start_date' => 'required',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        
+        $attendanceRecords = Attendance::where('student_id', $student->id)
+        ->whereBetween('date', [$startDate, $endDate])
+        ->orderBy('date', 'asc')
+        ->paginate(20)
+        ->appends($request->all());
+        
+        $attendanceData = $this->calculateAttendanceData($student, $startDate, $endDate);
 
 
-        $totalPresentMorning = $attendanceRecords->where('status_morning', 'present')->count();
-        $totalPresentAfternoon = $attendanceRecords->where('status_lunch', 'present')->count();
+        return view('students.student_profile', array_merge($attendanceData, [
+            'student' => $student,
+            'attendanceRecords' => $attendanceRecords
+        ]));
 
-        $totalAbsentMorning = $attendanceRecords->where('status_morning', 'absent')->count();
-        $totalAbsentAfternoon = $attendanceRecords->where('status_lunch', 'absent')->count();
+
+    }
+    private function calculateAttendanceData($student, $startDate = '', $endDate = ''){
+
+        $attendanceStudent = Attendance::where('student_id', $student->id);
+
+        if($startDate && $endDate){
+            $attendanceStudent->whereBetween('date',[$startDate, $endDate]);
+        }
+        $attendanceRecord = $attendanceStudent->get();
+
+       
+        $totalPresentMorning = $attendanceRecord->where('status_morning', 'present')->count();
+        $totalPresentAfternoon = $attendanceRecord->where('status_lunch', 'present')->count();
+        $totalAbsentMorning = $attendanceRecord->where('status_morning', 'absent')->count();
+        $totalAbsentAfternoon = $attendanceRecord->where('status_lunch', 'absent')->count();
         
         $totalAbsent = ($totalAbsentMorning * 0.5) + ($totalAbsentAfternoon * 0.5);
-        $totalDays = $attendanceRecords->count();
-
+        $totalDays = $attendanceStudent->count();
+        
         $attendancePercentageMorning = $totalDays > 0 ? ($totalPresentMorning / $totalDays) * 100 : 0;
         $attendancePercentageAfternoon = $totalDays > 0 ? ($totalPresentAfternoon / $totalDays) * 100 : 0;
 
-        return view('student.student_profile', compact('student','totalPresentMorning','totalPresentAfternoon',
-        'totalAbsent', 'attendancePercentageMorning', 'attendancePercentageAfternoon','attendanceRecords'));
+        return [
+            'totalPresentMorning' => $totalPresentMorning,
+            'totalPresentAfternoon' => $totalPresentAfternoon,
+            'totalAbsent' => $totalAbsent,
+            'attendancePercentageMorning' => $attendancePercentageMorning,
+            'attendancePercentageAfternoon' => $attendancePercentageAfternoon,
+        ];
 
     }
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $students = Student::paginate(3);
+        $students = Student::paginate(10);
+        $schoolYears = SchoolYear::all();
 
-        return view('student.students_list', compact('students'));
+        return view('students.students_list', compact('students', 'schoolYears'));
 
     }
 
@@ -161,11 +268,11 @@ class StudentController extends Controller
             'grade' => 'required|integer|min:7|max:10',
             'section' => 'required|integer|min:1|max:3',
         ]);
-
         $student = Student::create([
             'name' => $request->name,
             'grade' => $request->grade,
             'section' => $request->section,
+            'school_year_id' => SchoolYear::where('is_active', true)->first()->id
         ]);
         Tag::create([
             'rfid_tag' => $request->rfid_tag,
@@ -207,6 +314,7 @@ class StudentController extends Controller
             'name' => $request->name,
             'grade' => $request->grade,
             'section' => $request->section,
+            'school_year_id' => SchoolYear::where('year', $request->input('school_year'))->first()->id
         ]);
         if ($request->rfid_tag) {
             if ($student->tag) {

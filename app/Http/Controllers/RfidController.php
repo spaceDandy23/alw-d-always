@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
 use App\Models\RfidLog;
+use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\Tag;
 use Cache;
@@ -21,10 +23,16 @@ class RfidController extends Controller
 
         if($request->isMethod('post')){
             $currentHour = now()->format('H');
-            if (($currentHour >= 6 && $currentHour <= 8) || ($currentHour >=12 && $currentHour <= 17)) {
+            if ($currentHour <= 17 && $currentHour > 6 ) {
+                $activeSchoolYear = SchoolYear::where('is_active', true)->first();
 
-                $studentTag = Tag::where('rfid_tag', $request->input('rfid_tag'))->first();
 
+
+                $studentTag = Tag::where('rfid_tag', $request->input('rfid_tag'))
+                ->whereHas('student', function ($query) use ($activeSchoolYear) {
+                    $query->where('school_year_id', $activeSchoolYear->id);
+                })
+                ->first();
 
                 if(!$studentTag){
                     return response()->json([
@@ -34,35 +42,45 @@ class RfidController extends Controller
                 }
 
 
-                $students = Cache::get('students');
-                if($students){
-                    $students[$studentTag->student->id]['status'] = true;
-                    Cache::put('students', $students);
-                }
-                else{
-                    foreach(Student::all() as $student){
-                        $studentsSession[$student->id] = [
-                            'check_in_time' => now()->format('H:i:s'),
-                            'date' => now()->format('Y-m-d'),
-                            'status' => $student->id === $studentTag->student->id ? true : false,
-                        ];
-                    }
-                    Cache::put('students', $studentsSession);
-                }
+                $todayDate = now()->format('Y-m-d');
+
+                
 
 
                 RfidLog::create([
 
                     'student_id' => $studentTag->student->id,
                     'check_in_time' => now()->format('H:i:s'),
-                    'date' => now()->format('Y-m-d')
+                    'date' => $todayDate
 
                 ]);
+
+
+
+                if($currentHour < 12){
+
+                    Attendance::updateOrCreate(
+                        ['student_id' => $studentTag->student->id,
+                        'date'=> now()->format('Y-m-d')],
+                        ['status_morning' => 'present']
+
+                    );
+                }
+                
+                if($currentHour >= 12){
+
+                    Attendance::updateOrCreate(
+                        ['student_id' => $studentTag->student->id,
+                        'date'=> now()->format('Y-m-d')],
+                        ['status_lunch' => 'present']
+
+                    );
+                }
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Success',
                     'student' => $studentTag->student,
-                    'students' => Cache::get('students'),
 
                 ]);
             }

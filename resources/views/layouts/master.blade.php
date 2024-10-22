@@ -42,6 +42,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('attendances.reports') }}">Reports</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('holidays.index') }}">Special Occasions</a>
+                    </li>
                 @endif
             @endif
             </ul>

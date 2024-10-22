@@ -10,7 +10,7 @@ class Student extends Model
     use HasFactory;
 
 
-    protected $fillable = ['name', 'grade', 'section'];
+    protected $fillable = ['name', 'grade', 'section','school_year_id'];
 
 
     public function guardian() {
@@ -29,5 +29,8 @@ class Student extends Model
     }
     public function notifications() {
         return $this->hasMany(Notification::class);
+    }
+    public function schoolYear(){
+        return $this->belongsTo(SchoolYear::class);
     }
 }
