@@ -67,6 +67,7 @@
                     <th scope="col">Date</th>
                     <th scope="col">Status (Morning)</th>
                     <th scope="col">Status (Lunch)</th>
+                    <th scope="col">School Year</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -79,6 +80,7 @@
                         <td>{{ $attendance->date }}</td>
                         <td>{{ $attendance->status_morning }}</td>
                         <td>{{ $attendance->status_lunch }}</td>
+                        <td>{{ $attendance->student->schoolYear->year }}</td>
                         <td>
                             <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editAttendance{{ $attendance->id }}">Edit</a>
                             <!-- Edit Attendance Modal -->

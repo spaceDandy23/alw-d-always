@@ -13,5 +13,5 @@ class Holiday extends Model
 
 
 
-    protected $fillable = ['name', 'description', 'day','month'];
+    protected $fillable = ['name', 'description', 'day','month', 'end_month', 'end_day'];
 }

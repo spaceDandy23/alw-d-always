@@ -83,7 +83,7 @@
                         <td>{{ $student->grade }}</td>
                         <td>{{ $student->section }}</td>
                         <td>{{ $student->schoolYear->year }}</td>
-                        <td>{{ $student->guardian->name }}</td>
+                        <td>{{ $student->guardian->name ?? 'No Guardian'}}</td>
                         <td>
                         <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editStudent{{ $student->id }}">Edit</a>
 

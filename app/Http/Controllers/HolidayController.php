@@ -32,20 +32,39 @@ class HolidayController extends Controller
     public function store(Request $request)
     {
         
+        
         $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:255',
-            'month' => 'required',
-            'day' => 'required'
+            'description' => 'nullable|string|max:1000',
+            'start_month' => 'required|integer',
+            'start_day' => 'required|integer',
+            'end_month' => 'nullable|integer',
+            'end_day' => 'nullable|integer'
         ]);
+        $startMonth = $request->input('start_month');
+        $endMonth = $request->input('end_month');
+        $startDay = $request->input('start_day');
+        $endDay = $request->input('end_day');
 
+        $errorMessages = $this->validate($startMonth, $endMonth, $startDay, $endDay);
 
-        
+        if($errorMessages){
+            return redirect()->back()->with('error', $errorMessages);
+        }
+
+        if ($startMonth === $endMonth && $startDay === $endDay){
+
+            $endMonth = null;
+            $endDay = null;
+        }
+
         Holiday::create([
             'name' => $request->name,
             'description' => $request->description,
-            'month' => $request->month,
-            'day' => $request->day,
+            'month' => $request->start_month,
+            'day' => $request->start_day,
+            'end_month' => $endMonth,
+            'end_day' => $endDay,
         ]);
     
         return redirect()->route('holidays.index')->with('success', 'Holiday added successfully!');
@@ -72,15 +91,34 @@ class HolidayController extends Controller
      */
     public function update(Request $request, Holiday $holiday)
     {
+        $startMonth = $request->input('start_month');
+        $endMonth = $request->input('end_month');
+        $startDay = $request->input('start_day');
+        $endDay = $request->input('end_day');
+
+        $errorMessages = $this->validate($startMonth, $endMonth, $startDay, $endDay);
+
+        if($errorMessages){
+            return redirect()->back()->with('error', $errorMessages);
+        }
+
+
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'date' => 'required|date',
-            'description' => 'nullable|string|max:1000', 
+            'description' => 'nullable|string|max:1000',
+            'start_month' => 'required|integer',
+            'start_day' => 'required|integer',
+            'end_month' => 'nullable|integer',
+            'end_day' => 'nullable|integer'
         ]);
         $holiday->update([
             'name' => $request->name,
-            'date' => $request->date,
+            'month' => $request->start_month,
+            'day' => $request->start_day,
             'description' => $request->description,
+            'end_month' => $request->end_month,
+            'end_day' => $request->end_day
         ]);
         return redirect()->route('holidays.index')->with('success', 'Holiday updated successfully!');
     }
@@ -92,5 +130,27 @@ class HolidayController extends Controller
     {
         $holiday->delete();
         return redirect()->route('holidays.index')->with('success', 'Holiday deleted successfully!');
+    }
+    public function validate($startMonth, $endMonth, $startDay, $endDay){
+
+        $errorMessages = [];
+
+        if ($endMonth && !$endDay) {
+            $errorMessages[] = 'The end day must have a value if end month specified.';
+        }
+    
+        if ($endMonth && $endDay) {
+            if ($endMonth < $startMonth) {
+                $errorMessages[] = 'The end date must be after the start date.';
+            } elseif ($endMonth == $startMonth && $endDay < $startDay) {
+                $errorMessages[] = 'The end day must be after the start day.';
+            }
+        }
+
+        if ($errorMessages) {
+            return implode(' ', $errorMessages);
+        }
+
+
     }
 }

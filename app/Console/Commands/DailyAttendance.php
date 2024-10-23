@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Attendance;
+use App\Models\Holiday;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use Illuminate\Console\Command;
@@ -35,6 +36,21 @@ class DailyAttendance extends Command
         if ($today->isWeekend()) {
             return;
         }
+
+        $holidays = Holiday::all();
+        foreach($holidays as $holiday){
+
+            $startDate = now()->setMonth($holiday->month)->setDay($holiday->day)->format('Y-m-d');
+            $endDate = now()->setMonth($holiday->end_month)->setDay($holiday->end_day)->format('Y-m-d');
+
+            if($todayDate >= $startDate && $todayDate <= $endDate){
+
+                $this->info('its a holiday today');
+                return;
+            }
+
+        }
+
 
         foreach (Student::where('school_year_id', $activeSchoolYear->id)->get() as $student) {
             Attendance::firstOrCreate(
