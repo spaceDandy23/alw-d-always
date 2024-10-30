@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GuardianController;
@@ -10,9 +11,7 @@ use App\Http\Controllers\SpecialOccasionController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+
 
 Route::middleware('prevent.back')->group(function () {
     Route::middleware(['auth'])->group(function () {
@@ -20,17 +19,17 @@ Route::middleware('prevent.back')->group(function () {
         Route::match(['post', 'get'], 'register', [StudentController::class, 'register'])->name('register.student.parent');
         Route::post('import', [StudentController::class, 'importCSV'])->name('importCSV');
 
-        Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.filter');
+        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
 
         Route::get('logs/filter', [RfidController::class, 'search'])->name('logs.filter');
         Route::get('logs', [RfidController::class, 'index'])->name('logs.index');
         
         
 
-
+        Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.reports.filter');
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
-        Route::get('report/filter', [AttendanceController::class, 'filterAttendance'])->name('attendances.reports.filter');
-        Route::get('report', [AttendanceController::class, 'reports'])->name('attendances.reports');
+
+
         
 
         Route::resource('holidays', HolidayController::class);

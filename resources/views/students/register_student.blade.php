@@ -72,8 +72,13 @@
                 <input type="text" name="guardian_last_name" id="guardian_last_name" class="form-control mb-2">
                 <label for="phone_number" class="form-label">Guardian Phone Number</label>
                 <input type="text" name="phone_number" id="phone_number" class="form-control mb-2">
-                <label for="relationship" class="form-label">Relationship To Student</label>
-                <input type="text" name="relationship" id="relationship" class="form-control mb-2">
+                <label for="relationship" class="form-label">Relationship</label>
+                <select id="relationship" class="form-select mb-2" name="relationship">
+                        <option value="">-- Select Relationship --</option>
+                        @foreach ($relationships as $relationship )
+                            <option value="{{$relationship}}">{{$relationship}}</option>
+                        @endforeach
+                    </select>
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
 

@@ -18,7 +18,7 @@ class AuthController extends Controller
             ]);
             if (Auth::attempt($validatedData)){
                 $request->session()->regenerate();
-                return redirect()->route('students.index');
+                return redirect()->route('dashboard');
             }
 
         }

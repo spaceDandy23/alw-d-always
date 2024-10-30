@@ -10,12 +10,13 @@
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
-        <a class="navbar-brand" href="/">Home</a>
+    @if(Auth::check())
+        <a class="navbar-brand" href="{{ route('dashboard') }}">Dashboard</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-        @if(Auth::check())
+
             <ul class="navbar-nav">
                 @if(Auth::user()->isAdmin())
                     <li class="nav-item">
@@ -40,13 +41,10 @@
                         <a class="nav-link" href="{{ route('verify') }}">Scan</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('attendances.reports') }}">Reports</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('holidays.index') }}">Special Occasions</a>
                     </li>
                 @endif
-            @endif
+    @endif
             </ul>
             <ul class="navbar-nav ms-auto">
                 @if(Auth::check())
@@ -88,6 +86,7 @@
 </div>
 <div class="container mt-3 mb-4">
     @yield('content')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
 </div>
 </body>

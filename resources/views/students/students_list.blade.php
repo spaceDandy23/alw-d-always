@@ -105,8 +105,6 @@
                                             @csrf
                                             @method('PUT')
 
-                                            <label for="rfid_tag_{{ $student->id }}" class="form-label">RFID Tag</label>
-                                            <input type="text" class="form-control" id="rfid_tag_{{ $student->id }}" name="rfid_tag" value="{{ $student->tag->rfid_tag ?? '' }}">
 
                                             <label for="name_{{ $student->id }}" class="form-label">Name</label>
                                             <input type="text" class="form-control" id="name_{{ $student->id }}" name="name" value="{{ $student->name }}">
@@ -181,13 +179,20 @@
             <div class="modal-body">
                 <form action="{{ route('students.store') }}" method="post">
                     @csrf
-                    <label for="rfid_tag" class="form-label">RFID Tag</label>
-                    <input type="text" class="form-control" id="rfid_tag" name="rfid_tag">
-                    <label for="name" class="form-label">Name</label>
-                    <input type="text" class="form-control" id="name" name="name">
+                    <label for="last_name" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name">
+
+                    <label for="first_name" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name">
+
+
+                    <label for="middle_name" class="form-label">Middle Name</label>
+                    <input type="text" class="form-control" id="middle_name" name="middle_name">
+
+
                     <label for="grade" class="form-label">Grade</label>
                     <select class="form-select" id="grade" name="grade">
-                        @for($i = 7; $i <= 10; $i++)
+                        @for($i = 7; $i <= 12; $i++)
                             <option value="{{ $i }}">{{ $i }}</option>
                         @endfor
                     </select>
@@ -220,8 +225,13 @@
                     <div class="mb-3">
                         <label for="csv_file" class="form-label">CSV File</label>
                         <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv">
-                        <label for="school_year" class="form-label">School Year</label>
-                        <input type="text" class="form-control" id="school_year" name="school_year">
+
+
+                        <label for="start_year" class="form-label">Start Year</label>
+                        <input type="number" class="form-control" id="start_year" name="start_year">
+
+                        <label for="end_year" class="form-label">End Year</label>
+                        <input type="text" class="form-control" id="end_year" name="end_year" readonly>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -232,5 +242,16 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
 
+    document.getElementById('start_year').addEventListener('input', function(event){
+
+        document.getElementById('end_year').value = parseInt(event.target.value) + 1;
+
+
+    });
+
+});
+</script>
 @endsection

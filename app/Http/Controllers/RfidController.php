@@ -34,23 +34,30 @@ class RfidController extends Controller
         $section = $request->input('section');
 
 
+        $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
+        $setOfNames = explode(' ', $sanitizedName);
+
         $rfidLogs = RfidLog::join('students', 'rfid_logs.student_id', '=', 'students.id')
+        ->when($setOfNames, function($q, $setOfNames){
+            foreach($setOfNames as $name){
+                $name = trim($name);
+                $q->orWhere('students.name', 'LIKE', "%{$name}%");
+            }
+
+        })
+        ->when($section, function($q, $section){
+            return $q->where('students.section', '=', $section);
+        })
+        ->when($grade, function($q, $grade){
+            return $q->where('students.grade', '=', $grade);
+        })
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
         })
-        ->when($grade, function($q, $grade){
-            return  $q->where('students.grade', $grade);
-        })
-        ->when($name, function($q, $name){
-            return  $q->where('students.name','LIKE', "%{$name}%");
-        })
-        ->when($section, function($q, $section){
-            return  $q->where('students.section', $section);
-        })
-        ->orderBy('students.name','asc')
-        ->orderBy('rfid_logs.date','asc')
-        ->paginate(5)
+        ->paginate(20)
         ->appends($request->all());
+
+    
         return view('rfid.rfid_logs', compact('rfidLogs'));
 
 
@@ -87,7 +94,7 @@ class RfidController extends Controller
                 RfidLog::create([
 
                     'student_id' => $studentTag->student->id,
-                    'check_in_time' => now()->format('H:i:s'),
+                    'time' => now()->format('H:i:s'),
                     'date' => $todayDate
 
                 ]);

@@ -12,8 +12,6 @@ class Attendance extends Model
 
     protected $fillable = ['student_id', 'check_in_time', 'date', 'status_morning', 'status_lunch'];
 
-
-
     public function student(){
         return $this->belongsTo(Student::class);
     }

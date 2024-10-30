@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Attendance;
+use App\Models\RfidLog;
+use App\Models\Student;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -14,23 +17,40 @@ class AttendanceSeeder extends Seeder
      */
     public function run()
     {
-        $students = [33, 34, 35]; // Array of student IDs
-        $startDate = Carbon::createFromDate(2024, 10, 1);
+        $students = Student::all();
+        $startDate = Carbon::createFromDate(2024, 8, 1);
         $endDate = Carbon::createFromDate(2024, 10, 31);
+        $dates = $startDate->daysUntil($endDate);
 
-        // Loop through each day in October
-        foreach ($startDate->daysUntil($endDate) as $date) {
-            foreach ($students as $studentId) {
-                // Example: Mark every student present in the morning and absent at lunch
-                DB::table('attendances')->insert([
-                    'student_id' => $studentId,
-                    'check_in_time' => '08:00:00', // Example check-in time
-                    'date' => $date->toDateString(),
-                    'status_morning' => 'present', // Example status
-                    'status_lunch' => 'absent', // Example status
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+        foreach ($dates as $date) {
+            foreach ($students as $student) {
+                // Get RFID logs for the student on this date
+                $rfidLogs = RfidLog::where('student_id', $student->id)
+                    ->where('date', $date->format('Y-m-d'))
+                    ->get();
+
+                $statusMorning = 'absent';
+                $statusLunch = 'absent';
+
+                // Determine attendance based on RFID logs
+                foreach ($rfidLogs as $log) {
+                    if (Carbon::parse($log->check_in_time)->format('H') < 12) {
+                        $statusMorning = 'present';
+                    } else {
+                        $statusLunch = 'present';
+                    }
+                }
+
+                Attendance::updateOrCreate(
+                    [
+                        'student_id' => $student->id,
+                        'date' => $date->format('Y-m-d'),
+                    ],
+                    [
+                        'status_morning' => $statusMorning,
+                        'status_lunch' => $statusLunch,
+                    ]
+                );
             }
         }
     }

@@ -9,7 +9,7 @@ class RfidLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['student_id', 'rfid_tag', 'check_in_time', 'date'];
+    protected $fillable = ['student_id', 'rfid_tag', 'time', 'date'];
 
 
 
