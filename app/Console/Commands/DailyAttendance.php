@@ -41,11 +41,13 @@ class DailyAttendance extends Command
         foreach($holidays as $holiday){
 
             $startDate = now()->setMonth($holiday->month)->setDay($holiday->day)->format('Y-m-d');
-            $endDate = now()->setMonth($holiday->end_month)->setDay($holiday->end_day)->format('Y-m-d');
 
-            if($todayDate >= $startDate && $todayDate <= $endDate){
+            $endDate = !$holiday->end_month && !$holiday->end_day 
+            ? $startDate 
+            : now()->setMonth($holiday->end_month)->setDay($holiday->end_day)->format('Y-m-d');
 
-                $this->info('its a holiday today');
+            if ($todayDate >= $startDate && ($endDate === $startDate || $todayDate <= $endDate)) {
+                $this->info('It\'s a holiday today');
                 return;
             }
 

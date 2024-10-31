@@ -24,7 +24,7 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('logs/filter', [RfidController::class, 'search'])->name('logs.filter');
         Route::get('logs', [RfidController::class, 'index'])->name('logs.index');
         
-        
+        Route::post('message/parent/{student}', [NotificationController::class, 'messageParent'])->name('message.parent');
 
         Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.reports.filter');
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
@@ -46,7 +46,7 @@ Route::middleware('prevent.back')->group(function () {
 
         Route::get('guardians/filter', [GuardianController::class, 'search'])->name('guardians.filter');
         Route::resource('guardians', GuardianController::class);
-
+        Route::get('notifications/filter', [NotificationController::class, 'search'])->name('notifications.filter');
         Route::get('notifications', [NotificationController::class,'index'])->name('notifications.index');
     });
     Route::match(['post', 'get'], 'verify', [RfidController::class, 'verify'])->name('verify');

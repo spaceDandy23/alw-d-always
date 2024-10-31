@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Attendance;
+
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -9,15 +9,16 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->everyFiveSeconds();
 
 
-Artisan::command('say:hello', function () {
-    $this->comment('Hello');
-})->purpose('Say hello');
+// Artisan::command('say:hello', function () {
+//     $this->comment('Hello');
+// })->purpose('Say hello');
 
 
-// Schedule::command('app:store-morning-attendance')->everyFiveSeconds()->when(function (){
-//     return now()->format('H') >= 12;
-// });
-// Schedule::command('app:store-afternoon-attendance')->everyFifteenSeconds()->when(function (){
-//     return now()->format('H') >= 5;
-// });
+Schedule::command('app:daily-attendance')->daily();
+Schedule::command('app:message-parent')->dailyAt('12:00');
+Schedule::command('app:message-parent-lunch')->dailyAt('17:00');
+
+
+
+
 

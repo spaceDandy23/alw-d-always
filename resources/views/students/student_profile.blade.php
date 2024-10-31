@@ -11,6 +11,7 @@
                 </div>
                 <div class="card-body">
                     <div class="student-info mb-3">
+                        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#messageParentModal">Message Parent</button>
                         <p><strong>Student ID:</strong> {{ $student->id }}</p>
                         <p><strong>Grade:</strong> {{ $student->grade }}</p>
                         <p><strong>Section:</strong> {{ $student->section }}</p>
@@ -109,6 +110,31 @@
                 <!-- <div class="card-footer text-center">
                     <a class="btn btn-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $student->id }}">Delete</a>
                 </div> -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="messageParentModal" tabindex="-1" aria-labelledby="messageParentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageParentModalLabel">Message Parent</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ route('message.parent', $student->id) }}" method="post">
+                    @csrf
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" name="message" rows="3"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

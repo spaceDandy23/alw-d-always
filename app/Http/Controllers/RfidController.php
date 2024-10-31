@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\RfidLog;
 use App\Models\SchoolYear;
-use App\Models\Student;
+
 use App\Models\Tag;
-use Cache;
+
 use Illuminate\Http\Request;
-use Session;
+
 
 
 class RfidController extends Controller

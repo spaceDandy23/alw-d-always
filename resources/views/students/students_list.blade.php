@@ -82,7 +82,7 @@
                         <td>{{ $student->name }}</td>
                         <td>{{ $student->grade }}</td>
                         <td>{{ $student->section }}</td>
-                        <td>{{ $student->schoolYear->year }}</td>
+                        <td>{{ $student->schoolYear->year ?? 'No School Year' }}</td>
                         <td>{{ $student->guardian->name ?? 'No Guardian'}}</td>
                         <td>
                         <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editStudent{{ $student->id }}">Edit</a>
@@ -124,7 +124,7 @@
                                             </select>
 
                                             <label for="school_year_{{ $student->id }}" class="form-label">School Year</label>
-                                            <input type="text" name="school_year" class="form-control" id="school_year" value="{{ $student->schoolYear->year }}"readonly>
+                                            <input type="text" name="school_year" class="form-control" id="school_year" value="{{ $student->schoolYear->year ?? 'No School Year' }}"readonly>
 
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
