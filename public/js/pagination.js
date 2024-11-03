@@ -18,8 +18,8 @@ export function renderPaginatedLinks(paginationData, searchQuery = '') {
         const nextButton = `<li class="page-item"><a class="page-link" href="#" onclick="loadPage('${paginationData.next_page_url}&search=${encodeURIComponent(searchQuery)}')">Next</a></li>`;
         paginationElement.innerHTML += nextButton;
     }
-    paginationCaption.innerHTML = `Showing <span class="fw-semibold">${paginationData.from}</span>
-                                        to <span class="fw-semibold">${paginationData.to}</span>
+    paginationCaption.innerHTML = `Showing <span class="fw-semibold">${paginationData.from ?? 0}</span>
+                                        to <span class="fw-semibold">${paginationData.to ?? 0}</span>
                                         of <span class="fw-semibold">${paginationData.total}</span>`;
 }
 

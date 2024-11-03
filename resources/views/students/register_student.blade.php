@@ -66,7 +66,7 @@
                 <input type="text" name="grade" id="grade" class="form-control" readonly>
                 <label for="section" class="form-label">Section</label>
                 <input type="text" name="section" id="section" class="form-control mb-2" readonly>
-                <label for="guardian_first_name" class="form-label">Guardian's First Name</label>
+                <!-- <label for="guardian_first_name" class="form-label">Guardian's First Name</label>
                 <input type="text" name="guardian_first_name" id="guardian_first_name" class="form-control mb-2">
                 <label for="guardian_last_name" class="form-label">Guardian's Last Name</label>
                 <input type="text" name="guardian_last_name" id="guardian_last_name" class="form-control mb-2">
@@ -74,11 +74,9 @@
                 <input type="text" name="phone_number" id="phone_number" class="form-control mb-2">
                 <label for="relationship" class="form-label">Relationship</label>
                 <select id="relationship" class="form-select mb-2" name="relationship">
-                        <option value="">-- Select Relationship --</option>
-                        @foreach ($relationships as $relationship )
-                            <option value="{{$relationship}}">{{$relationship}}</option>
-                        @endforeach
-                    </select>
+                    <option value="">-- Select Relationship --</option>
+
+                </select> -->
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
 

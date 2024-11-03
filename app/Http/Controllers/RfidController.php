@@ -15,7 +15,11 @@ use Illuminate\Http\Request;
 class RfidController extends Controller
 {
     public function index(){
-        $rfidLogs = RfidLog::paginate(20);
+        $rfidLogs = RfidLog::whereHas('student', function($q){
+            return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
+
+        })
+        ->paginate(20);
         return view('rfid.rfid_logs', compact('rfidLogs'));
     }
     public function search(Request $request){
@@ -54,6 +58,7 @@ class RfidController extends Controller
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
         })
+        ->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id)
         ->paginate(20)
         ->appends($request->all());
 

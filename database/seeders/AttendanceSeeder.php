@@ -24,15 +24,12 @@ class AttendanceSeeder extends Seeder
 
         foreach ($dates as $date) {
             foreach ($students as $student) {
-                // Get RFID logs for the student on this date
                 $rfidLogs = RfidLog::where('student_id', $student->id)
                     ->where('date', $date->format('Y-m-d'))
                     ->get();
 
                 $statusMorning = 'absent';
                 $statusLunch = 'absent';
-
-                // Determine attendance based on RFID logs
                 foreach ($rfidLogs as $log) {
                     if (Carbon::parse($log->check_in_time)->format('H') < 12) {
                         $statusMorning = 'present';

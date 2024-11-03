@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\SchoolYear;
 use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -14,7 +15,13 @@ class NotificationController extends Controller
 
     public function index(){
 
-        $notifications = Notification::paginate(20);
+        $notifications = Notification::whereHas('guardian', function($q){
+            return $q->whereHas('students', function($q){
+                return $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
+            });
+
+        })
+        ->paginate(20);
         return view('notifications.notifications_list', compact('notifications'));
     }
     public function messageParent(Request $request, Student $student){
@@ -23,8 +30,7 @@ class NotificationController extends Controller
             'message' => 'required|min:1|max:160|regex:/^[a-zA-Z0-9\s.,?!]+$/'
         ]);
 
-        if($student->guardian){
-
+        if(!$student->guardian){
             return back()->with('error', 'Student doesnt have an associated guardian');
         }
 

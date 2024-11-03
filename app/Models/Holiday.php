@@ -10,8 +10,5 @@ class Holiday extends Model
     use HasFactory;
 
 
-
-
-
     protected $fillable = ['name', 'description', 'day','month', 'end_month', 'end_day'];
 }

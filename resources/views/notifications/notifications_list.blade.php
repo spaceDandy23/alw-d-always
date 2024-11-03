@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('page_title', 'RFID Logs')
+@section('page_title', 'Notifications')
 
 @section('content')
 
@@ -36,7 +36,6 @@
                 @include('partials.alerts')
                 <tr>
                     <th scope="col">Guardian</th>
-                    <th scope="col">Ward</th>
                     <th scope="col">Message</th>
                     <th scope="col">Date</th>
                 </tr>
@@ -45,11 +44,6 @@
                 @foreach($notifications as $notif)
                     <tr>
                         <td>{{ $notif->guardian->name }}</td>
-                        <td>
-                        @foreach ($notif->guardian->students as $student)
-                            {{ $student->name }}
-                        @endforeach
-                        </td>
                         <td>{{ $notif->message}}</td>
                         <td>{{ $notif->created_at->format('Y-m-h') }}</td>
                     </tr>

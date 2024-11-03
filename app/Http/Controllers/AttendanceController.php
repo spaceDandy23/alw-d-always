@@ -41,6 +41,7 @@ class AttendanceController extends Controller
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
         })
+        ->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id)
         ->selectRaw('
         students.id as student_id,
         students.name as student_name,
@@ -85,8 +86,8 @@ class AttendanceController extends Controller
             $totalPresent += $attendance->total_present;
         });
 
-        $totalNumbers =['overallAbsent' => $totalPresent, 
-                        'overallPresent' => $totalAbsent,
+        $totalNumbers =['overallAbsent' => $totalAbsent, 
+                        'overallPresent' => $totalPresent,
                         'startDate' => $startDate,
                         'endDate' => $endDate,
                         'totalStudents' => $totalStudents ];

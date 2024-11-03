@@ -42,7 +42,9 @@ Route::middleware('prevent.back')->group(function () {
 
         Route::get('student/{student}', [StudentController::class, 'profile'])->name('student.profile');
         Route::get('student/{student}/filter', [StudentController::class,'filterStudentAttendance'])->name('student.filter');
+        Route::post('archive', [AdminController::class, 'backupDatabase'])->name('back.up');
 
+        Route::post('change', [AdminController::class, 'changeSchoolYear'])->name('change.school.year');
 
         Route::get('guardians/filter', [GuardianController::class, 'search'])->name('guardians.filter');
         Route::resource('guardians', GuardianController::class);

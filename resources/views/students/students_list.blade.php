@@ -43,19 +43,6 @@
                         </select>  
                     </div>
                     <div class="col-auto">
-                        <label for="school_year" class="form-label">School Year</label>                                              
-                    </div>
-                    <div class="col">
-                        <select class="form-select" id="school_year" name="school_year">
-                        <option value="">-- Select School Year --</option>
-                            @foreach($schoolYears as $schoolYear)
-                                <option value="{{ $schoolYear->id }}">
-                                    {{ $schoolYear->year }}
-                                </option>
-                            @endforeach
-                        </select> 
-                    </div>
-                    <div class="col-auto">
                         <button class="btn btn-primary" type="submit">Filter</button>
                     </div>
                 </div>
@@ -192,16 +179,38 @@
 
                     <label for="grade" class="form-label">Grade</label>
                     <select class="form-select" id="grade" name="grade">
+                        <option value="">-- Select Grade --</option>
                         @for($i = 7; $i <= 12; $i++)
                             <option value="{{ $i }}">{{ $i }}</option>
                         @endfor
                     </select>
                     <label for="section" class="form-label">Section</label>
                     <select class="form-select" id="section" name="section">
+                        <option value="">-- Select Section --</option>
                         @for($i = 1; $i <= 3; $i++)
                             <option value="{{ $i }}">{{ $i }}</option>
                         @endfor
                     </select>
+
+
+                    <label for="guardian_last_name" class="form-label">Guardian Last Name</label>
+                    <input type="text" class="form-control" id="guardian_last_name" name="guardian_last_name">
+
+                    <label for="guardian_first_name" class="form-label">Guardian First Name</label>
+                    <input type="text" class="form-control" id="guardian_first_name" name="guardian_first_name">
+
+                    <label for="relationship" class="form-label">Relationship</label>
+                    <select id="relationship" class="form-select" name="relationship">
+                        <option value="">-- Select Relationship --</option>
+                        @foreach ($relationships as $relationship )
+                            <option value="{{$relationship}}">{{$relationship}}</option>
+                        @endforeach
+                    </select>
+                    <label for="phone_number" class="form-label">Phone Number</label>
+                    <input type="text" class="form-control" id="phone_number" name="phone_number">
+
+
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Save Student</button>

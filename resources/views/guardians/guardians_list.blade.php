@@ -6,9 +6,6 @@
 
 <div class="row justify-content-center">
     <div class="col">
-        <div class="d-flex justify-content-center mb-2">
-            <a href="#" class="btn btn-primary mx-4" data-bs-toggle="modal" data-bs-target="#createGuardian">Add Guardian</a>
-        </div>
         <div class="p-4">
             <form action="{{ route('guardians.filter') }}" method="GET" class="mb-4">
                 <div class="row g-3 align-items-center">
@@ -126,36 +123,6 @@
         </div>
     </div>
 </div>
-<!-- Create Guardian Modal -->
-<div class="modal fade" id="createGuardian" tabindex="-1" aria-labelledby="createGuardianLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createGuardianLabel">Add New Guardian</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('guardians.store') }}" method="post">
-                    @csrf
-                    <label for="name" class="form-label">Name</label>
-                    <input type="text" class="form-control" id="name" name="name">
-                    <label for="relationship" class="form-label">Relationship</label>
-                    <select id="relationship" class="form-select" name="relationship">
-                        <option value="">-- Select Relationship --</option>
-                        @foreach ($relationships as $relationship )
-                            <option value="{{$relationship}}">{{$relationship}}</option>
-                        @endforeach
-                    </select>
-                    <label for="phone_number" class="form-label">Phone Number</label>
-                    <input type="text" class="form-control" id="phone_number" name="phone_number">
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Guardian</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 @endsection

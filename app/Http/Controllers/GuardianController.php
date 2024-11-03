@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Guardian;
+use App\Models\SchoolYear;
 use Illuminate\Http\Request;
 
 class GuardianController extends Controller
@@ -14,7 +15,10 @@ class GuardianController extends Controller
         $phoneNumber = $request->input('phone_number');
         $relationship = $request->input('relationship');
 
-        $guardians = Guardian::when($guardianName, function ($q, $guardianName){
+        $guardians = Guardian::whereHas('students', function($query){
+            return $query->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
+        })
+        ->when($guardianName, function ($q, $guardianName){
             return $q->where('name', 'LIKE', "%{$guardianName}%");
         })
         ->when($phoneNumber, function($q, $phoneNumber){
@@ -46,7 +50,10 @@ class GuardianController extends Controller
      */
     public function index()
     {
-        $guardians = Guardian::paginate(20);
+        $guardians = Guardian::whereHas('students', function($query){
+            return $query->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
+        })
+        ->paginate(20);
 
 
         $relationships = [
@@ -74,19 +81,6 @@ class GuardianController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'relationship' => 'required|string|max:50', 
-            'phone_number' => 'nullable|string|max:15',
-        ]);
-
-        Guardian::create([
-            'name' => $request->name,
-            'relationship_to_student' => $request->relationship,
-            'contact_info' => $request->phone_number,
-        ]);
-
-        return redirect()->route('guardians.index')->with('success', 'Guardian added successfully!');
     }
 
     /**

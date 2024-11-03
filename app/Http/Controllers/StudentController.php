@@ -25,10 +25,10 @@ class StudentController extends Controller
                 'grade' => 'required|integer|min:7|max:10',
                 'section' => 'required|integer|min:1|max:3',
                 
-                'guardian_first_name' => 'required|string|max:255', 
-                'guardian_last_name' => 'required|string|max:255', 
-                'relationship' => 'required|string|max:50', 
-                'phone_number' => 'nullable|string|max:15',
+                // 'guardian_first_name' => 'required|string|max:255', 
+                // 'guardian_last_name' => 'required|string|max:255', 
+                // 'relationship' => 'required|string|max:50', 
+                // 'phone_number' => 'nullable|string|max:15',
             ]);
             $student = Student::findOrFail($request->student_id);
 
@@ -40,15 +40,15 @@ class StudentController extends Controller
                 'student_id' => $student->id,
             ]);
 
-            $guardian = Guardian::create([
-                'name' => "{$request->guardian_last_name}, {$request->guardian_first_name}",
-                'relationship_to_student' => $request->input('relationship'),
-                'contact_info' => $request->input('phone_number'),
-            ]);
+            // $guardian = Guardian::create([
+            //     'name' => "{$request->guardian_last_name}, {$request->guardian_first_name}",
+            //     'relationship_to_student' => $request->input('relationship'),
+            //     'contact_info' => $request->input('phone_number'),
+            // ]);
 
-            $student->update([
-                'guardian_id' => $guardian->id
-            ]);
+            // $student->update([
+            //     'guardian_id' => $guardian->id
+            // ]);
 
             
             return redirect()->route('register.student.parent')->with('success', 'Student Registered');
@@ -68,10 +68,10 @@ class StudentController extends Controller
         return view('students.register_student', compact('relationships'));
 
     }
-    public function searchQuery($name, $grade, $section, $schoolYear = ''){
+    public function searchQuery($name, $grade, $section){
         $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
         $setOfNames = explode(' ', $sanitizedName);
-
+        $schoolYear = SchoolYear::where('is_active', true)->first();
         return Student::query()
         ->when($setOfNames, function($q, $setOfNames){
             foreach($setOfNames as $name){
@@ -87,8 +87,8 @@ class StudentController extends Controller
         })
         ->when($schoolYear, function($q, $schoolYear){
             return $q->where('school_year_id',  $schoolYear->id);
-        })
-        ->paginate(10);
+        });
+
 
 
     }
@@ -100,10 +100,10 @@ class StudentController extends Controller
             $name = $request->input('name');
             $grade = $request->input('grade');
             $section = $request->input('section');
-            $activeSchoolYear = SchoolYear::where('is_active', true)->first();
+
 
         
-            $studentQuery = $this->searchQuery($name, $grade, $section, $activeSchoolYear);
+            $studentQuery = $this->searchQuery($name, $grade, $section);
 
 
             return response()->json([
@@ -116,13 +116,23 @@ class StudentController extends Controller
             $name = $request->input('name');
             $grade = $request->input('grade');
             $section = $request->input('section');
-            $schoolYear = SchoolYear::find($request->input('school_year'));
+
+
+            $relationships = [
+                'Mother',
+                'Father',
+                'Grandparent',
+                'Aunt',
+                'Uncle',
+                'Sibling',
+                'Other'
+            ];
             
 
-            $students = $this->searchQuery($name, $grade, $section, $schoolYear);
+            $students = $this->searchQuery($name, $grade, $section)->paginate(10);
             $students->appends($request->all());
-            $schoolYears = SchoolYear::all();
-            return view('students.students_list', compact('students','schoolYears'));
+
+            return view('students.students_list', compact('students', 'relationships'));
 
         }
 
@@ -270,10 +280,20 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $students = Student::paginate(11);
-        $schoolYears = SchoolYear::all();
+        $students = Student::where('school_year_id', SchoolYear::where('is_active', true)->first()->id)
+        ->paginate(11);
 
-        return view('students.students_list', compact('students', 'schoolYears'));
+        $relationships = [
+            'Mother',
+            'Father',
+            'Grandparent',
+            'Aunt',
+            'Uncle',
+            'Sibling',
+            'Other'
+        ];
+
+        return view('students.students_list', compact('students',  'relationships'));
 
     }
 
@@ -294,15 +314,31 @@ class StudentController extends Controller
             'last_name' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
             'middle_name' => 'required|string|max:255',
-            'grade' => 'required|integer',
-            'section' => 'required|integer',
+            'grade' => 'required',
+            'section' => 'required',
+            'guardian_last_name' => 'required|string|max:255',
+            'guardian_first_name' => 'required|string|max:255',
+            'relationship' => 'required',
+            'phone_number' => 'required',
         ]);
+
+
+        $guardian = Guardian::create([
+            'name' => "{$request->guardian_last_name}, {$request->guardian_first_name}",
+            'relationship_to_student' => $request->relationship,
+            'contact_info' => $request->phone_number,
+        ]);
+
+
         Student::create([
             'name' => "{$request->last_name}, {$request->first_name} {$request->middle_name}",
             'grade' => $request->grade,
             'section' => $request->section,
-            'school_year_id' => SchoolYear::where('is_active', true)->first()->id
+            'school_year_id' => SchoolYear::where('is_active', true)->first()->id,
+            'guardian_id' => $guardian->id,
         ]);
+
+
 
         
 

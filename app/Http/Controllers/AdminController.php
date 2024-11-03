@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use Artisan;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
@@ -14,13 +15,22 @@ class AdminController extends Controller
     public function index(){
         
         $activeSchoolYear = SchoolYear::where('is_active', true)->first();
+        
+
+        if(!$activeSchoolYear){
+            return view('admin_dashboard', compact('activeSchoolYear'));
+        }
         $totalStudents = Student::where('school_year_id', $activeSchoolYear->id )
         ->count();
-        $totalDaysRecorded = (Carbon::parse(Attendance::orderBy('date')
+        $totalDaysRecorded = Attendance::orderBy('date')
         ->whereHas('student', function($query) use ($activeSchoolYear){
             return $query->where('school_year_id', $activeSchoolYear->id);
         })
-        ->first()->date))->diffInDays(today());
+        ->first();
+
+        if($totalDaysRecorded){
+            $totalDaysRecorded = Carbon::parse($totalDaysRecorded->date)->diffInDays(today());
+        }
 
         $overallAverageAttendanceRate = Attendance::
         whereHas('student', function($query) use ($activeSchoolYear){
@@ -45,6 +55,9 @@ class AdminController extends Controller
         SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) +
         SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END) AS total_present
         '))
+        ->whereHas('student', function($q) use($activeSchoolYear){
+            return $q->where('school_year_id', $activeSchoolYear->id);
+        })
         ->groupBy('year', 'month')
         ->orderBy('year')
         ->orderBy('month')
@@ -55,6 +68,9 @@ class AdminController extends Controller
         COUNT(CASE WHEN status_morning = "absent" THEN 1 END) as total_morning,
         COUNT(CASE WHEN status_lunch = "absent" THEN 1 END) as total_lunch
         '))
+        ->whereHas('student', function($q) use($activeSchoolYear){
+            return $q->where('school_year_id', $activeSchoolYear->id);
+        })
         ->groupBy('student_id')
         ->having('total_morning', '=', 0) 
         ->having('total_lunch', '=', 0)   
@@ -66,6 +82,9 @@ class AdminController extends Controller
             SUM(CASE WHEN status_morning = "absent" THEN 0.5 ELSE 0 END) +
             SUM(CASE WHEN status_lunch = "absent" THEN 0.5 ELSE 0 END) as total_absent
         '))
+        ->whereHas('student', function($q) use($activeSchoolYear){
+            return $q->where('school_year_id', $activeSchoolYear->id);
+        })
         ->having('total_absent', '>=', 5)
         ->groupBy('student_id')
         ->paginate(5);
@@ -102,18 +121,47 @@ class AdminController extends Controller
         ->select('students.grade', 'students.section', DB::raw('
             YEAR(date) as year, 
             MONTH(date) as month,
-            SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) + SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 1 END)
+            SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) + SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END)
             AS total_present
         '))
+        ->where('students.school_year_id', $activeSchoolYear->id)
         ->groupBy('students.grade', 'students.section', DB::raw('YEAR(date), MONTH(date)'))
         ->get();
+
+
+        $schoolYears = SchoolYear::all();
         
         return view('admin_dashboard', compact('overallAttendanceSummary', 
         'attendancePerMonth', 'perfectAttendance', 'absentAlot', 'recentAttendanceRecords',
-                    'attendanceBySection', 'attendanceTrend'));
+                    'attendanceBySection', 'attendanceTrend', 'activeSchoolYear', 'schoolYears'));
+    }
+    public function backupDatabase(){
+
+
+        
+        $databaseName = env('DB_DATABASE');
+        $username = env('DB_USERNAME');
+        $command = "mysqldump -u $username $databaseName > \"C:\\Users\\igor\\OneDrive\\Desktop\\backup.sql\"";
+        exec($command);
+
+        return redirect()->route('dashboard');
     }
 
 
+    public function changeSchoolYear(Request $request){
 
+        $request->validate([
+            'new_school_year' => 'required'
+        ]);
+
+
+        SchoolYear::where('is_active', true)->update(['is_active' => false]);
+
+        SchoolYear::find($request->input('new_school_year'))->update(['is_active' => true]);
+
+
+        
+        return redirect()->route('dashboard')->with('success', 'School Year changed successfully');
+    }
 
 }
