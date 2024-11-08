@@ -7,10 +7,11 @@ use App\Models\Guardian;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\Tag;
-use Carbon\Carbon;
+
 use Illuminate\Http\Request;
-use Schema;
 use Storage;
+use Illuminate\Support\Facades\DB;
+
 
 class StudentController extends Controller
 {
@@ -103,7 +104,7 @@ class StudentController extends Controller
 
 
         
-            $studentQuery = $this->searchQuery($name, $grade, $section);
+            $studentQuery = $this->searchQuery($name, $grade, $section)->paginate(5);
 
 
             return response()->json([
@@ -159,47 +160,64 @@ class StudentController extends Controller
 
         $schoolYearRecord = SchoolYear::updateOrCreate(
             ['year' => "{$startYear} - {$endYear}"],
-            ['is_active' => true]
+            ['is_active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now()]
         
         );
 
 
 
         $file = $request->file('csv_file');
-        $path = $file->storeAs('public/csv', $file->getClientOriginalName());
+        $csvFile = fopen($file, 'r');
 
 
-        $existingStudents = Student::where('school_year_id', $schoolYearRecord->id)->get();
+        $header = fgetcsv($csvFile);
+    
+        DB::transaction(function() use ($csvFile, $header, $schoolYearRecord) {
+            while (($row = fgetcsv($csvFile)) !== false) {
+                $data = array_combine($header, $row);
+                $student = Student::firstOrCreate(
+                    [
+                        'name' => "{$data['last name']}, {$data['first name']} {$data['middle name']}",
+                        'grade' => $data['grade'],
+                        'section' => $data['section'],
+                        'school_year_id' => $schoolYearRecord->id
+                    ],
+                    [
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
 
+                $guardian = Guardian::firstOrCreate(
+                    [
+                        'name' => $data['guardian name'],
+                        'contact_info' => $data['phone number']
+                    ],
+                    [
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+    
 
-        if($existingStudents->isEmpty()){
-            if (($handle = fopen(Storage::path($path), 'r')) !== false) {
-                fgetcsv($handle); 
-                while (($data = fgetcsv($handle)) !== false) {
-                    if ($existingStudents->isEmpty()) {
-
-                        $guardian = Guardian::create([
-                            'name' => $data[5],
-                            'relationship_to_student' => $data[6],
-                            'contact_info' => $data[7],
-                        ]);
-          
-                        Student::create([
-                            'name' => "{$data[0]}, {$data[1]} {$data[2]}", 
-                            'grade' => intval($data[3]),
-                            'section' => intval($data[4]),
-                            'school_year_id' => $schoolYearRecord->id,
-                            'guardian_id' => $guardian->id,
-                        ]);
-        
-
-                    }
-                }
-                fclose($handle);
+                $student->guardians()->syncWithoutDetaching([
+                    $guardian->id => [
+                        'relationship_to_student' => $data['relationship to student'],
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                ]);
             }
-            return back()->with('success', 'Students added successfully!');
-        }
-        return back()->with('success', 'Students added successfully!');
+        });
+    
+
+        fclose($csvFile);
+    
+
+        return redirect()->route('students.index')->with('success', 'Students Uploaded Successfully');
+
     }
     public function profile(Student $student){
 
@@ -280,7 +298,7 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $students = Student::where('school_year_id', SchoolYear::where('is_active', true)->first()->id)
+        $students = Student::with('guardians')->where('school_year_id', SchoolYear::where('is_active', true)->first()->id)
         ->paginate(11);
 
         $relationships = [
@@ -292,7 +310,6 @@ class StudentController extends Controller
             'Sibling',
             'Other'
         ];
-
         return view('students.students_list', compact('students',  'relationships'));
 
     }
@@ -310,39 +327,39 @@ class StudentController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'last_name' => 'required|string|max:255',
-            'first_name' => 'required|string|max:255',
-            'middle_name' => 'required|string|max:255',
-            'grade' => 'required',
-            'section' => 'required',
-            'guardian_last_name' => 'required|string|max:255',
-            'guardian_first_name' => 'required|string|max:255',
-            'relationship' => 'required',
-            'phone_number' => 'required',
-        ]);
+        // $request->validate([
+        //     'last_name' => 'required|string|max:255',
+        //     'first_name' => 'required|string|max:255',
+        //     'middle_name' => 'required|string|max:255',
+        //     'grade' => 'required',
+        //     'section' => 'required',
+        //     'guardian_last_name' => 'required|string|max:255',
+        //     'guardian_first_name' => 'required|string|max:255',
+        //     'relationship' => 'required',
+        //     'phone_number' => 'required',
+        // ]);
 
 
-        $guardian = Guardian::create([
-            'name' => "{$request->guardian_last_name}, {$request->guardian_first_name}",
-            'relationship_to_student' => $request->relationship,
-            'contact_info' => $request->phone_number,
-        ]);
+        // $guardian = Guardian::create([
+        //     'name' => "{$request->guardian_last_name}, {$request->guardian_first_name}",
+        //     'relationship_to_student' => $request->relationship,
+        //     'contact_info' => $request->phone_number,
+        // ]);
 
 
-        Student::create([
-            'name' => "{$request->last_name}, {$request->first_name} {$request->middle_name}",
-            'grade' => $request->grade,
-            'section' => $request->section,
-            'school_year_id' => SchoolYear::where('is_active', true)->first()->id,
-            'guardian_id' => $guardian->id,
-        ]);
+        // Student::create([
+        //     'name' => "{$request->last_name}, {$request->first_name} {$request->middle_name}",
+        //     'grade' => $request->grade,
+        //     'section' => $request->section,
+        //     'school_year_id' => SchoolYear::where('is_active', true)->first()->id,
+        //     'guardian_id' => $guardian->id,
+        // ]);
 
 
 
         
 
-        return redirect()->route('students.index')->with('success', 'Student added successfully!');
+        // return redirect()->route('students.index')->with('success', 'Student added successfully!');
     }
 
     /**

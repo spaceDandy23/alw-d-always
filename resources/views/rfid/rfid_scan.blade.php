@@ -63,7 +63,7 @@
             })
             .then((data) => {
                 if(data.success){
-                    console.log(data.students);
+                    console.log(data.student);
                     console.log(data.message);
                     showStudentVerified(data);
                 }

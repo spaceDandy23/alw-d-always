@@ -11,7 +11,7 @@
                 </div>
                 <div class="card-body">
                     <div class="student-info mb-3">
-                        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#messageParentModal">Message Parent</button>
+                        <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#messageParentModal">Message Guardians</button>
                         <p><strong>Student ID:</strong> {{ $student->id }}</p>
                         <p><strong>Grade:</strong> {{ $student->grade }}</p>
                         <p><strong>Section:</strong> {{ $student->section }}</p>
@@ -120,7 +120,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="messageParentModalLabel">Message Parent</h5>
+                <h5 class="modal-title" id="messageParentModalLabel">Message Guardians</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -129,6 +129,17 @@
                     <div class="mb-3">
                         <label for="message" class="form-label">Message</label>
                         <textarea class="form-control" id="message" name="message" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Guardians to Message:</label>
+                        @foreach ($student->guardians as $guardian)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="guardian_ids[]" value="{{ $guardian->id }}" id="guardian_{{ $guardian->id }}">
+                                <label class="form-check-label" for="guardian_{{ $guardian->id }}">
+                                    {{ $guardian->name }} ({{ $guardian->pivot->relationship_to_student }}) 
+                                </label>
+                            </div>
+                        @endforeach
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

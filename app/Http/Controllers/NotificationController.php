@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Guardian;
 use App\Models\Notification;
 use App\Models\SchoolYear;
 use App\Models\Student;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 
@@ -29,36 +29,45 @@ class NotificationController extends Controller
         $request->validate([
             'message' => 'required|min:1|max:160|regex:/^[a-zA-Z0-9\s.,?!]+$/'
         ]);
+        $guardianIds = $request->input('guardian_ids', []);
 
-        if(!$student->guardian){
-            return back()->with('error', 'Student doesnt have an associated guardian');
+        if(!$guardianIds){
+            return back()->with('error', 'Please fill out at least one checkbox');
         }
 
 
-        $ch = curl_init();
-        $parameters = array(
-            'apikey' => env('SEMAPHORE_API_KEY'), 
-            'number' => $student->guardian->contact_info,
-            'message' => $request->message,
-            'sendername' => 'Alwad'
-        );
+        $guardians = Guardian::whereIn('id', $guardianIds)->get();
 
-        curl_setopt( $ch, CURLOPT_URL,'https://api.semaphore.co/api/v4/messages' );
-        curl_setopt( $ch, CURLOPT_POST, 1 );
+        foreach($guardians as $guardian){
 
 
-        curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $parameters ) );
+            $ch = curl_init();
+            $parameters = array(
+                'apikey' => env('SEMAPHORE_API_KEY'), 
+                'number' => $guardian->contact_info,
+                'message' => $request->message,
+                'sendername' => 'Alwad'
+            );
+    
+            curl_setopt( $ch, CURLOPT_URL,'https://api.semaphore.co/api/v4/messages' );
+            curl_setopt( $ch, CURLOPT_POST, 1 );
+    
+    
+            curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $parameters ) );
+    
+            curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+    
+            $output = curl_exec( $ch );
+            curl_close ($ch);
+    
+            Notification::create([
+                'guardian_id' => $guardian->id, 
+                'student_id' => $student->id, 
+                'message' => $request->message]);
+        }
 
-        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 
-        $output = curl_exec( $ch );
-        curl_close ($ch);
-
-        Notification::create([
-            'guardian_id' => $student->guardian->id, 
-            'student_id' => $student->id, 
-            'message' => $request->message]);
-        dd($output);
+        return back()->with('success', 'Message sent sucessfully');
 
     }
     public function search(Request $request){

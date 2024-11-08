@@ -12,10 +12,11 @@ class Student extends Model
 
     protected $fillable = ['name', 'grade', 'section','school_year_id', 'guardian_id'];
 
+    public function guardians(){
 
-    public function guardian() {
-        return $this->belongsTo(Guardian::class);
+        return $this->belongsToMany(Guardian::class, 'guardian_student')->withPivot('relationship_to_student');
     }
+
     public function rfidLogs(){
         return $this->hasMany(RfidLog::class);
     }

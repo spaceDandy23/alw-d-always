@@ -6,9 +6,12 @@ use App\Models\Attendance;
 use App\Models\RfidLog;
 use App\Models\SchoolYear;
 
+use App\Models\Student;
 use App\Models\Tag;
 
 use Illuminate\Http\Request;
+use App\Models\Notification;
+
 
 
 
@@ -72,7 +75,7 @@ class RfidController extends Controller
 
         if($request->isMethod('post')){
             $currentHour = now()->format('H');
-            if ($currentHour <= 17 && $currentHour > 6 ) {
+            if ( true) {
                 $activeSchoolYear = SchoolYear::where('is_active', true)->first();
 
 
@@ -93,24 +96,38 @@ class RfidController extends Controller
 
                 $todayDate = now()->format('Y-m-d');
 
-                
 
-
-                RfidLog::create([
-
-                    'student_id' => $studentTag->student->id,
-                    'time' => now()->format('H:i:s'),
-                    'date' => $todayDate
-
-                ]);
-
+                $student = RfidLog::where('student_id', $studentTag->student->id)
+                ->where('date', $todayDate)
+                ->latest()
+                ->first();
+                if ($student) {
+                    if (!$student->check_out) {
+                        $student->update(['check_out' => now()->format('H:i:s')]);
+                        $this->message($studentTag->student->id, 'student left');
+                    } else {
+                        RfidLog::create([
+                            'student_id' => $studentTag->student->id,
+                            'check_in' => now()->format('H:i:s'),
+                            'date' => $todayDate,
+                        ]);
+                        $this->message($studentTag->student->id, 'student went in');
+                    }
+                } else {
+                    RfidLog::create([
+                        'student_id' => $studentTag->student->id,
+                        'check_in' => now()->format('H:i:s'),
+                        'date' => $todayDate,
+                    ]);
+                    $this->message($studentTag->student->id, 'student went in');
+                }
 
 
                 if($currentHour < 12){
 
                     Attendance::updateOrCreate(
-                        ['student_id' => $studentTag->student->id,
-                        'date'=> now()->format('Y-m-d')],
+                    ['student_id' => $studentTag->student->id,
+                                'date'=> now()->format('Y-m-d')],
                         ['status_morning' => 'present']
 
                     );
@@ -143,6 +160,38 @@ class RfidController extends Controller
 
         return view('rfid.rfid_scan');
 
+
+    }
+    public function message($studentID, $message){
+
+
+        $student = Student::find($studentID);
+
+        foreach($student->guardians as $guardian){
+            $ch = curl_init();
+            $parameters = array(
+                'apikey' => env('SEMAPHORE_API_KEY'), 
+                'number' => $guardian->contact_info,
+                'message' => $message,
+                'sendername' => 'Alwad'
+            );
+
+            curl_setopt( $ch, CURLOPT_URL,'https://api.semaphore.co/api/v4/messages' );
+            curl_setopt( $ch, CURLOPT_POST, 1 );
+
+
+            curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $parameters ) );
+
+            curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+
+            $output = curl_exec( $ch );
+            curl_close ($ch);
+
+            Notification::create([
+                'guardian_id' => $guardian->id, 
+                'student_id' => $student->id, 
+                'message' => $message]);
+        }
 
     }
 }

@@ -18,7 +18,8 @@
                     <th scope="col">Student Name</th>
                     <th scope="col">Grade</th>
                     <th scope="col">Section</th>
-                    <th scope="col">Time Logged</th>
+                    <th scope="col">Checked in at</th>
+                    <th scope="col">Checked out at</th>
                     <th scope="col">School Year</th>
                     <th scope="col">Date</th>
                 </tr>
@@ -29,6 +30,8 @@
                         <td>{{ $log->student->name }}</td>
                         <td>{{ $log->student->grade }}</td>
                         <td>{{ $log->student->section }}</td>
+                        <td>{{ $log->check_in }}</td>
+                        <td>{{ $log->check_out }}</td>
                         <td>{{ $log->time }}</td>
                         <td>{{ $log->student->SchoolYear->year }}</td>
                         <td>{{ $log->date}}</td>

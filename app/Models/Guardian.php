@@ -10,12 +10,12 @@ class Guardian extends Model
     use HasFactory;
 
 
-    protected $fillable = ['name','relationship_to_student','contact_info'];
+    protected $fillable = ['name','contact_info'];
 
 
+    public function students(){
+        return $this->belongsToMany(Student::class, 'guardian_student')->withPivot('relationship_to_student');
 
-    public function students() {
-        return $this->hasMany(Student::class);
     }
     public function notifications() {
         return $this->hasMany(Notification::class);

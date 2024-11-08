@@ -7,7 +7,7 @@
 <div class="row justify-content-center">
     <div class="col">
         <div class="d-flex justify-content-center mb-2">
-            <a href="#" class="btn btn-primary mx-4" data-bs-toggle="modal" data-bs-target="#createStudent">Add Student</a>
+            <!-- <a href="#" class="btn btn-primary mx-4" data-bs-toggle="modal" data-bs-target="#createStudent">Add Student</a> -->
             <a href="#" class="btn btn-secondary mx-4" data-bs-toggle="modal" data-bs-target="#uploadCSV">Upload CSV</a>
         </div>
 
@@ -70,7 +70,12 @@
                         <td>{{ $student->grade }}</td>
                         <td>{{ $student->section }}</td>
                         <td>{{ $student->schoolYear->year ?? 'No School Year' }}</td>
-                        <td>{{ $student->guardian->name ?? 'No Guardian'}}</td>
+                        <td> @foreach ($student->guardians as $guardian )
+                            <li>
+                                {{ $guardian->name }} - {{ ucfirst($guardian->pivot->relationship_to_student) }}
+                            </li>
+                        @endforeach
+                        </td>
                         <td>
                         <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editStudent{{ $student->id }}">Edit</a>
 

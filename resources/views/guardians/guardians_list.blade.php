@@ -16,18 +16,7 @@
                         <input type="text" name="guardian_name" id="guardian_name" class="form-control" placeholder="Enter Guardian Name">
                     </div>
                     <div class="col-auto">
-                        <label for="relationship" class="form-label">Relationship</label>
-                    </div>
-                    <div class="col">
-                    <select id="relationship" class="form-select" name="relationship">
-                        <option value="">-- Select Relationship --</option>
-                        @foreach ($relationships as $relationship )
-                            <option value="{{$relationship}}">{{$relationship}}</option>
-                        @endforeach
-                    </select>
-                    </div>
-                    <div class="col-auto">
-                        <label for="phone_number_filter" class="form-label">Phone Number</label>                                              
+                        <label for="phone_number_filter" class="form-label">Phone Number</label> 
                     </div>
                     <div class="col">
                         <input type="text" name="phone_number" id="phone_number_filter" class="form-control" placeholder="Enter Phone Number">
@@ -44,7 +33,6 @@
                 @include('partials.alerts')
                 <tr>
                     <th scope="col">Name</th>
-                    <th scope="col">Relationship</th>
                     <th scope="col">Phone Number</th>
                     <th scope="col">Actions</th>
                 </tr>
@@ -53,7 +41,6 @@
                 @foreach($guardians as $guardian)
                     <tr>
                         <td>{{ $guardian->name }}</td>
-                        <td>{{ $guardian->relationship_to_student }}</td>
                         <td>{{ $guardian->contact_info }}</td>
                         <td>
                             <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editGuardian{{ $guardian->id }}">Edit</a>
@@ -73,13 +60,6 @@
                                                 @method('PUT')
                                                 <label for="name_{{ $guardian->id }}" class="form-label">Name</label>
                                                 <input type="text" class="form-control" id="name_{{ $guardian->id }}" name="name" value="{{ $guardian->name }}">
-                                                <label for="relationship_{{ $guardian->id }}" class="form-label">Relationship</label>
-                                                    <select id="relationship_{{ $guardian->id }}" class="form-select" name="relationship">
-                                                        <option value="">-- Select Relationship --</option>
-                                                        @foreach ($relationships as $relationship )
-                                                            <option value="{{$relationship}}" {{ $guardian->relationship_to_student == $relationship ? 'selected' : '' }}>{{$relationship}}</option>
-                                                        @endforeach
-                                                    </select>
                                                 <label for="phone_number_{{ $guardian->id }}" class="form-label">Phone Number</label>
                                                 <input type="text" class="form-control" id="phone_number_{{ $guardian->id }}" name="phone_number" value="{{ $guardian->contact_info }}">
                                                 <div class="modal-footer">

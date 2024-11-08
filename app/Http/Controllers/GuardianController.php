@@ -13,7 +13,7 @@ class GuardianController extends Controller
 
         $guardianName = $request->input('guardian_name');
         $phoneNumber = $request->input('phone_number');
-        $relationship = $request->input('relationship');
+
 
         $guardians = Guardian::whereHas('students', function($query){
             return $query->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
@@ -23,9 +23,6 @@ class GuardianController extends Controller
         })
         ->when($phoneNumber, function($q, $phoneNumber){
             return $q->where('contact_info', 'LIKE', "%{$phoneNumber}%");
-        })
-        ->when($relationship, function($q, $relationship){
-            return $q->where('relationship_to_student', $relationship);
         })
         ->paginate(5)
         ->appends($request->all());
@@ -50,10 +47,13 @@ class GuardianController extends Controller
      */
     public function index()
     {
-        $guardians = Guardian::whereHas('students', function($query){
-            return $query->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
+        $guardians = Guardian::whereHas('students', function ($query) {
+            $query->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
         })
+        ->with('students') 
         ->paginate(20);
+
+
 
 
         $relationships = [
@@ -106,13 +106,11 @@ class GuardianController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'relationship' => 'required|string|max:50',
             'phone_number' => 'nullable|string|max:15',
         ]);
 
         $guardian->update([
             'name' => $request->name,
-            'relationship_to_student' => $request->relationship,
             'contact_info' => $request->phone_number,
 
         ]);
