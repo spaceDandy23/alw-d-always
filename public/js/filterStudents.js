@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let searchStudentName = '';
     let filterGrade = '';
     let filterSection = '';
-    let students = {}; // Store selected students
+    let students = {}; 
 
     document.getElementById('filter_button').addEventListener('click', () => {
         searchStudentName = document.getElementById('search_student').value;

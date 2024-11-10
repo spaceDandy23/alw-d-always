@@ -2,56 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SchoolYear;
-use App\Models\Student;
+
 use App\Models\User;
-use Auth;
+
 use Hash;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
+
 
 class UserController extends Controller
 {
-    public function listIndex(){
 
-
-        $studentsGroupedBySection = Auth::user()->students->groupBy(function ($student) {
-            return $student->grade . '-' . $student->section;
-        })
-        ->map(function($students){
-
-            return $students->each(function ($student){
-
-
-                $attendanceCount = $student->attendances->count();
-                $presentCount = $student->attendances
-                ->where('status_morning', 'present')
-                ->where('status_lunch', 'present')
-                ->count();
-                $absentCount = $student->attendances
-                ->where('status_morning', 'absent')
-                ->where('status_lunch', 'absent')
-                ->count();
-
-
-                $averagePresent = $attendanceCount > 0 ? ($presentCount / $attendanceCount) * 100 : 0;
-
-
-                $averageAbsent = $attendanceCount > 0 ? ($absentCount / $attendanceCount) * 100 : 0;
-
-                $student->average_present = $averagePresent;
-                $student->average_absent = $averageAbsent;
-
-
-                
-            });
-            
-
-        });
-
-
-        return view('students.watch_list', compact('studentsGroupedBySection'));
-    }
     // public function filterStudent(Request $request){
 
     //     $name = $request->input('name');
@@ -87,38 +47,6 @@ class UserController extends Controller
 
     // }
 
-    public function storeWatchlist(Request $request){
-        $sections = $request->input('sections', []);
-
-        if(!$sections){
-            return back()->with('error', 'Please fill out at least one checkbox');
-        }
-
-        foreach($sections as $section){
-
-            $students = Student::where('grade', $section[0])
-            ->where('section', $section[2])
-            ->where('school_year_id', SchoolYear::where('is_active', true)->first()->id)
-            ->pluck('id');
-            if ($students->isNotEmpty()) {
-                foreach ($students as $id) {
-                    if (!Auth::user()->students()->where('student_id', $id)->exists()) {
-                        Auth::user()->students()->attach($id, [
-                            'created_at' => now(), 
-                            'updated_at' => now()
-                        ]);
-                    }
-                }
-
-            }
-
-        }
-        
-        
-        return redirect()->route('list.index')->with('success','Section added successfully');
-
-
-    }
     /**
      * Display a listing of the resource.
      */

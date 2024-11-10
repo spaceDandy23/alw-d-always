@@ -35,67 +35,81 @@
     </style>
 </head>
 <body>
+    @php
+        use App\Models\SchoolYear;
+    @endphp
+    @if(Auth::check())
     <nav class="sidebar">
-        @php
-            use App\Models\SchoolYear;
-        @endphp
-        <h3 class="mb-4">{{ SchoolYear::where('is_active', true)->first()->year ?? 'No school year'  }}</h3>
+        @if(Auth::user()->isAdmin())
+        <h3 class="mb-4"> {{ SchoolYear::where('is_active', true)->first()->year}}</h3>
+        @else
+        <h3 class="mb-4"> {{ SchoolYear::latest()->first()->year}}</h3>
+        @endif
+        
+        @if(Auth::user()->isAdmin())
         <ul class="nav flex-column">
-            @if(Auth::check())
-                @if(Auth::user()->isAdmin())
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('students.index') }}">Students</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('guardians.index') }}">Guardians</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('logs.index') }}">Logs</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('attendances.index') }}">Attendances</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('notifications.index') }}">Notifications</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('register.student.parent') }}">Register Student</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('verify') }}">Scan</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('users.index') }}">Users</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('holidays.index') }}">Special Occasions</a>
-                    </li>
-                @elseif(Auth::user()->isTeacher())
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('logs.index') }}">Logs</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('attendances.index') }}">Attendances</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('list.index') }}">Watch List</a>
-                    </li>
-                @endif
-            @endif
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('students.index') }}">Students</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('guardians.index') }}">Guardians</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('logs.index') }}">Logs</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('attendances.index') }}">Attendances</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('notifications.index') }}">Notifications</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('register.student.parent') }}">Register Student</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('verify') }}">Scan</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('users.index') }}">Users</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('holidays.index') }}">Special Occasions</a>
+            </li>
         </ul>
+            @elseif(Auth::user()->isTeacher())
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('teacher.dashboard') }}">Dashboard</a>
+            </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('logs.index') }}">Logs</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('attendances.index') }}">Attendances</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('list.index') }}">Watch List</a>
+                </li>
+        </ul>
+
+        @endif
         <hr>
         <div class="mt-auto">
-            @if(Auth::check())
-                <p>Hello, {{ Auth::user()->name }}</p>
-                <a class="btn btn-danger btn-sm" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</a>
-            @else
+            @if(!Auth::check())
                 <a class="btn btn-primary btn-sm" href="{{ route('login') }}">Login</a>
             @endif
+            <p>Hello, {{ Auth::user()->name }}</p>
+            <a class="btn btn-danger btn-sm" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</a>
         </div>
     </nav>
+    @endif
+
+
+
+
 
     <div class="content">
         @yield('content')

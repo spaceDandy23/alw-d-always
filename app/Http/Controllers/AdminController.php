@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\SchoolYear;
 use App\Models\Student;
-use Artisan;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
@@ -14,7 +13,10 @@ class AdminController extends Controller
 {
     public function index(){
         
+
+
         $activeSchoolYear = SchoolYear::where('is_active', true)->first();
+
         
 
         if(!$activeSchoolYear){

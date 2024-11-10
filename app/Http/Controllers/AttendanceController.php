@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use Auth;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
@@ -40,9 +41,21 @@ class AttendanceController extends Controller
         })
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
-        })
-        ->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id)
-        ->selectRaw('
+        });
+
+
+        if(Auth::user()->isAdmin()){
+            $attendances->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
+
+        }
+        elseif(Auth::user()->isTeacher()){
+            $attendances->where('students.school_year_id', SchoolYear::latest()->first()->id);
+
+        }
+
+        
+
+        $attendances->selectRaw('
         students.id as student_id,
         students.name as student_name,
         SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) +

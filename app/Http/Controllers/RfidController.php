@@ -9,6 +9,7 @@ use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\Tag;
 
+use Auth;
 use Illuminate\Http\Request;
 use App\Models\Notification;
 
@@ -19,8 +20,16 @@ class RfidController extends Controller
 {
     public function index(){
         $rfidLogs = RfidLog::whereHas('student', function($q){
-            return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
 
+            if(Auth::user()->isAdmin()){
+                return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
+    
+            }
+
+            return $q->where('students.school_year_id', SchoolYear::latest()->first()->id);
+    
+            
+    
         })
         ->paginate(20);
         return view('rfid.rfid_logs', compact('rfidLogs'));
@@ -60,10 +69,20 @@ class RfidController extends Controller
         })
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
-        })
-        ->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id)
-        ->paginate(20)
-        ->appends($request->all());
+        });
+
+        
+        if(Auth::user()->isAdmin()){
+            $rfidLogs->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
+
+        }
+        elseif(Auth::user()->isTeacher()){
+            $rfidLogs->where('students.school_year_id', SchoolYear::latest()->first()->id);
+
+        }
+
+        $rfidLogs = $rfidLogs->paginate(20)
+                    ->appends($request->all());
 
     
         return view('rfid.rfid_logs', compact('rfidLogs'));
@@ -75,7 +94,8 @@ class RfidController extends Controller
 
         if($request->isMethod('post')){
             $currentHour = now()->format('H');
-            if ($currentHour <= 17 && $currentHour > 6) {
+            // if ($currentHour <= 17 && $currentHour > 6) {
+                if(true){
                 $activeSchoolYear = SchoolYear::where('is_active', true)->first();
 
 

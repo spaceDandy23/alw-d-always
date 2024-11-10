@@ -13,6 +13,7 @@
             </button>
         </div>
 
+        <!-- Add Section Modal -->
         <div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
@@ -57,12 +58,11 @@
             @foreach($studentsGroupedBySection as $section => $students)
                 <div class="card mb-4">
                     <div class="card-header">
-                        <!-- Make the section clickable -->
-                        <h4 class="mb-0" style="cursor: pointer;" onclick="toggleSection('{{ $section }}')">Section: {{ $section }}</h4>
+                        <h4 style="cursor: pointer;" onclick="toggleSection('{{ $section }}')">Section: {{ $section }}</h4>
+                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteSectionModal{{ $section }}">Delete</button>
                     </div>
 
                     <div class="card-body" id="section-{{ $section }}" style="display: none;">
-                        <!-- Display a table of students within the section -->
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
@@ -71,7 +71,7 @@
                                     <th>Section</th>
                                     <th>Average times present</th>
                                     <th>Average times absent</th>
-                                    <th>Action</th>
+                                    <th>View Recent Activity</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -83,7 +83,9 @@
                                         <td>{{ $student->average_present }} %</td>
                                         <td>{{ $student->average_absent }} %</td>
                                         <td>
-                                            <a href="{{ route('students.show', $student->id) }}" class="btn btn-info btn-sm">View</a>
+                                            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#viewRecentActivityModal{{ $student->id }}">
+                                                View
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -91,6 +93,87 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Delete Section Modal -->
+                <div class="modal fade" id="deleteSectionModal{{ $section }}" tabindex="-1" aria-labelledby="deleteSectionModalLabel{{ $section }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form action="{{ route('watchlist.delete') }}" method="POST">
+                                @csrf
+                                <input type="hidden" value="{{ $section }}" name="section">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteSectionModalLabel{{ $section }}">Confirm Deletion</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete the section <strong>{{ $section }}</strong></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                @foreach($students as $student)
+                    <div class="modal fade" id="viewRecentActivityModal{{ $student->id }}" tabindex="-1" aria-labelledby="viewRecentActivityModalLabel{{ $student->id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="viewRecentActivityModalLabel{{ $student->id }}">Recent Activity for {{ $student->name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                
+                                <div class="modal-body">
+                                    <p>Recent activity details for {{ $student->name }}</p>
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Morning Status</th>
+                                                <th>Lunch Status</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>{{ $student->recent_attendance->status_morning ?? 'No attendance recorded' }}</td>
+                                                <td>{{ $student->recent_attendance->status_lunch ?? 'No attendance recorded' }}</td>
+                                                <td>{{ $student->recent_attendance->date ?? 'N/A' }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Time checked in</th>
+                                                <th>Time checked out</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if($student->recent_logs->isEmpty())
+                                                <tr>
+                                                    <td colspan="2" class="text-center">No recent logs yet</td>
+                                                </tr>
+                                            @else
+                                                @foreach($student->recent_logs as $log)
+                                                    <tr>
+                                                        <td>{{ $log->check_in }}</td>
+                                                        <td>{{ $log->check_out }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            @endif
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             @endforeach
         @else
             <p class="text-muted">No sections available.</p>

@@ -9,6 +9,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RfidController;
 use App\Http\Controllers\SpecialOccasionController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -72,10 +73,10 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.reports.filter');
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
         
-
-        Route::get('list', [UserController::class, 'listIndex'])->name('list.index');
-        Route::post('list', [UserController::class, 'create'])->name('list.create');
-        Route::post('list', [UserController::class, 'storeWatchlist'])->name('watchlist.store');
+        Route::get('dashboard', [TeacherController::class, 'index'])->name('teacher.dashboard');
+        Route::get('list', [TeacherController::class, 'listIndex'])->name('list.index');
+        Route::post('list', [TeacherController::class, 'storeWatchlist'])->name('watchlist.store');
+        Route::post('list/delete', [TeacherController::class, 'removeList'])->name('watchlist.delete');
     });
 });
 

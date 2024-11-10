@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Auth;
-use Cache;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -21,7 +20,7 @@ class AuthController extends Controller
                 return redirect()->route('dashboard');
             }
             else{
-                return redirect()->route('attendances.index');
+                return redirect()->route('teacher.dashboard');
             }
 
         }
