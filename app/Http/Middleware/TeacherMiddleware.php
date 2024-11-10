@@ -20,6 +20,9 @@ class TeacherMiddleware
         if(Auth::check() && ( Auth::user()->isTeacher() || Auth::user()->isAdmin()) ){
             return $next($request);
         }
-        return back();
+        elseif(Auth::check() && Auth::user()->isAdmin()){
+            return back();
+        }
+        return redirect()->route('login');
     }
 }
