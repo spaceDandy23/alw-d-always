@@ -16,6 +16,11 @@ class Student extends Model
 
         return $this->belongsToMany(Guardian::class, 'guardian_student')->withPivot('relationship_to_student');
     }
+    public function teachers(){
+
+        return $this->belongsToMany(User::class, 'student_teacher', 'student_id', 'teacher_id');
+
+    }
 
     public function rfidLogs(){
         return $this->hasMany(RfidLog::class);

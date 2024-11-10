@@ -75,7 +75,7 @@ class RfidController extends Controller
 
         if($request->isMethod('post')){
             $currentHour = now()->format('H');
-            if ( true) {
+            if ($currentHour <= 17 && $currentHour > 6) {
                 $activeSchoolYear = SchoolYear::where('is_active', true)->first();
 
 

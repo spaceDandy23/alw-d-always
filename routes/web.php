@@ -9,27 +9,35 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RfidController;
 use App\Http\Controllers\SpecialOccasionController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 
 
 Route::middleware('prevent.back')->group(function () {
-    Route::middleware(['auth'])->group(function () {
+    Route::middleware(['admin'])->group(function () {
         Route::post('search', [StudentController::class, 'search'])->name('search');
         Route::match(['post', 'get'], 'register', [StudentController::class, 'register'])->name('register.student.parent');
         Route::post('import', [StudentController::class, 'importCSV'])->name('importCSV');
 
         Route::get('/', [AdminController::class, 'index'])->name('dashboard');
 
+
+        
         Route::get('logs/filter', [RfidController::class, 'search'])->name('logs.filter');
         Route::get('logs', [RfidController::class, 'index'])->name('logs.index');
-        
-        Route::post('message/parent/{student}', [NotificationController::class, 'messageParent'])->name('message.parent');
 
         Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.reports.filter');
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
+        
 
 
+        Route::post('message/parent/{student}', [NotificationController::class, 'messageParent'])->name('message.parent');
+
+
+
+
+        Route::resource('users', UserController::class);
         
 
         Route::resource('holidays', HolidayController::class);
@@ -37,9 +45,10 @@ Route::middleware('prevent.back')->group(function () {
 
         Route::put('attendances/{student}', [AttendanceController::class, 'update'])->name('attendances.update');
 
-        Route::get('students/filter', [StudentController::class, 'search'])->name('students.filter');
+
         Route::resource('students', StudentController::class);
 
+        Route::get('students/filter', [StudentController::class, 'search'])->name('students.filter');
         Route::get('student/{student}', [StudentController::class, 'profile'])->name('student.profile');
         Route::get('student/{student}/filter', [StudentController::class,'filterStudentAttendance'])->name('student.filter');
         Route::post('archive', [AdminController::class, 'backupDatabase'])->name('back.up');
@@ -54,5 +63,19 @@ Route::middleware('prevent.back')->group(function () {
     Route::match(['post', 'get'], 'verify', [RfidController::class, 'verify'])->name('verify');
     Route::match(['post', 'get'], 'login', [AuthController::class, 'login'])->name('login');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::middleware(['teacher'])->group(function (){
+
+        Route::get('logs/filter', [RfidController::class, 'search'])->name('logs.filter');
+        Route::get('logs', [RfidController::class, 'index'])->name('logs.index');
+
+        Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.reports.filter');
+        Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
+        
+
+        Route::get('list', [UserController::class, 'listIndex'])->name('list.index');
+        Route::post('list', [UserController::class, 'create'])->name('list.create');
+        Route::post('list', [UserController::class, 'storeWatchlist'])->name('watchlist.store');
+    });
 });
 

@@ -97,6 +97,9 @@
                                             @csrf
                                             @method('PUT')
 
+                                            <label for="rfid_tag{{ $student->id }}">Rfid Tag</label>
+                                            <input type="text" class="form-control" id="rfid_tag_{{ $student->id }}" name="rfid_tag" value="{{ $student->tag->rfid_tag ?? '' }}">
+
 
                                             <label for="name_{{ $student->id }}" class="form-label">Name</label>
                                             <input type="text" class="form-control" id="name_{{ $student->id }}" name="name" value="{{ $student->name }}">

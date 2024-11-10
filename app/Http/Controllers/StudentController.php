@@ -384,6 +384,7 @@ class StudentController extends Controller
     public function update(Request $request, Student $student)
     {
         $request->validate([
+            
             'name' => 'required|string|max:255',
             'grade' => 'required|integer',
             'section' => 'required|integer',
@@ -393,7 +394,11 @@ class StudentController extends Controller
             'grade' => $request->grade,
             'section' => $request->section,
         ]);
-
+        Tag::where('student_id', $student->id)
+        ->first()
+        ->update([
+            'rfid_tag' => $request->rfid_tag
+        ]);
         return redirect()->route('students.index')->with('success', 'Student edited successfully!');
     }
 

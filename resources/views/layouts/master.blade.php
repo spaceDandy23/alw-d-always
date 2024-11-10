@@ -68,7 +68,20 @@
                         <a class="nav-link" href="{{ route('verify') }}">Scan</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('users.index') }}">Users</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('holidays.index') }}">Special Occasions</a>
+                    </li>
+                @elseif(Auth::user()->isTeacher())
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('logs.index') }}">Logs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('attendances.index') }}">Attendances</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('list.index') }}">Watch List</a>
                     </li>
                 @endif
             @endif

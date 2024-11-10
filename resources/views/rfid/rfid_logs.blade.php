@@ -32,7 +32,6 @@
                         <td>{{ $log->student->section }}</td>
                         <td>{{ $log->check_in }}</td>
                         <td>{{ $log->check_out }}</td>
-                        <td>{{ $log->time }}</td>
                         <td>{{ $log->student->SchoolYear->year }}</td>
                         <td>{{ $log->date}}</td>
                     </tr>

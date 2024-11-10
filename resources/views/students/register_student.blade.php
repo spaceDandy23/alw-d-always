@@ -87,7 +87,7 @@
                     <th scope="col">Section</th>
                 </thead>
                 <tbody id="students_searched">
-                    <!-- Student rows will be populated here -->
+
                 </tbody>
             </table>
 

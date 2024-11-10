@@ -16,9 +16,12 @@ class AuthController extends Controller
                 'email' => 'required|email|exists:users,email',
                 'password' => 'required|min:8',
             ]);
-            if (Auth::attempt($validatedData)){
+            if (Auth::attempt($validatedData)  && Auth::user()->isAdmin() ){
                 $request->session()->regenerate();
                 return redirect()->route('dashboard');
+            }
+            else{
+                return redirect()->route('attendances.index');
             }
 
         }

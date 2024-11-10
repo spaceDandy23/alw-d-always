@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\NoCache;
 use App\Http\Middleware\PreventBackHistory;
+use App\Http\Middleware\TeacherMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'prevent.back' => NoCache::class,
             'prevent_back_history' => PreventBackHistory::class,
+            'teacher' => TeacherMiddleware::class,
+            'admin' => AdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
