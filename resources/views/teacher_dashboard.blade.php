@@ -60,7 +60,6 @@
                                 {{ $absent->student->name }} 
                                 <span class="badge bg-warning">Total Absent: {{ $absent->total_absent }}</span>
                             </div>
-                            <a href="{{ route('student.profile', $absent->student->id) }}" class="btn btn-outline-primary btn-sm">View Profile</a>
                         </li>
                     @endforeach
                 </ul>
