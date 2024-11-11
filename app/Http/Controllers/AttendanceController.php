@@ -19,13 +19,14 @@ class AttendanceController extends Controller
         
     }
 
-    public function getStudentsAttendance($name = '', $grade = '', $section = '', $startDate = '', $endDate = '')
+    public function getStudentsAttendance($name = '', $grade = '', $section = '', $startDate = '', $endDate = '', $fromExcuse = '')
     {
         $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
         $setOfNames = explode(' ', $sanitizedName);
 
 
         $attendances = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
+        
         ->when($setOfNames, function($q, $setOfNames){
             foreach($setOfNames as $name){
                 $name = trim($name);
@@ -41,7 +42,13 @@ class AttendanceController extends Controller
         })
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
+        })
+        ->where(function($q) {
+            $q->whereIn('attendances.status_morning', ['excused', 'absent'])
+              ->orWhereIn('attendances.status_lunch', ['excused', 'absent']);
         });
+
+
 
 
         if(Auth::user()->isAdmin()){
@@ -54,7 +61,7 @@ class AttendanceController extends Controller
         }
 
         
-
+        if(!$fromExcuse){
         $attendances->selectRaw('
         students.id as student_id,
         students.name as student_name,
@@ -69,7 +76,7 @@ class AttendanceController extends Controller
         ')
         ->groupBy('students.id', 'students.name');
 
-    
+        }
     
         return $attendances; 
     }
@@ -85,6 +92,24 @@ class AttendanceController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
+        $fromExcuse = $request->input('from_cancel_excuse');
+        if($fromExcuse){
+
+            $attendances = $this->getStudentsAttendance($name, $grade, $section, $startDate, $endDate, $fromExcuse)
+            ->select(
+    'attendances.id as attendance_id',
+             'students.id as student_id', 
+             'students.name as name',
+             'students.grade as grade',
+             'attendances.status_morning as status_morning',
+             'attendances.status_lunch as status_lunch',
+             'attendances.date as date')
+            ->paginate(20)
+            ->appends($request->all());
+            return view('attendances.cancel_excuse_students', compact('attendances'));
+
+
+        }
         $fatherlessChild = $this->getStudentsAttendance($name, $grade, $section,$startDate, $endDate);
         $getOverallAttendance = $fatherlessChild->get();
         $attendances = $fatherlessChild->paginate(10)->appends($request->all());
@@ -124,5 +149,51 @@ class AttendanceController extends Controller
 
     }
 
+
+    public function attendances(){
+
+        $attendances = Attendance::latest()
+        ->whereIn('status_morning', ['excused', 'absent'])
+        ->orWhereIn('status_lunch', ['excused', 'absent'])
+        ->whereHas('student', function($q){
+            return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
+
+        })
+        ->paginate(40);
+
+        return view('attendances.cancel_excuse_students', compact('attendances'));
+
+    }
+
+    public function excuseCancel(Request $request){
+
+        if(!$request->attendance){
+            return back()->with('error', 'No checkbox selected');
+        }
+        foreach($request->attendance as $id => $value){
+
+            $record = Attendance::find($id);
+
+            if (isset($value['status_morning'])) {
+                $record->status_morning = $value['status_morning'];
+            }
+            else{
+
+                $record->status_morning = 'absent';
+
+            }
+            
+            if (isset($value['status_lunch'])) {
+                $record->status_lunch = $value['status_lunch'];
+            }
+            else{
+                $record->status_lunch = 'absent';
+            }
+            $record->save();
+        }
+
+
+        return redirect()->back()->with('success', 'Students excused successfully');
+    }
 
 }

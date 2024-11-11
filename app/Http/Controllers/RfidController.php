@@ -19,7 +19,8 @@ use App\Models\Notification;
 class RfidController extends Controller
 {
     public function index(){
-        $rfidLogs = RfidLog::whereHas('student', function($q){
+        $rfidLogs = RfidLog::latest('date')
+        ->whereHas('student', function($q){
 
             if(Auth::user()->isAdmin()){
                 return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
@@ -53,7 +54,8 @@ class RfidController extends Controller
         $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
         $setOfNames = explode(' ', $sanitizedName);
 
-        $rfidLogs = RfidLog::join('students', 'rfid_logs.student_id', '=', 'students.id')
+        $rfidLogs = RfidLog::latest('date')
+        ->join('students', 'rfid_logs.student_id', '=', 'students.id')
         ->when($setOfNames, function($q, $setOfNames){
             foreach($setOfNames as $name){
                 $name = trim($name);
@@ -81,7 +83,8 @@ class RfidController extends Controller
 
         }
 
-        $rfidLogs = $rfidLogs->paginate(20)
+        $rfidLogs = $rfidLogs
+                    ->paginate(20)
                     ->appends($request->all());
 
     

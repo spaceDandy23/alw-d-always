@@ -60,6 +60,8 @@ Route::middleware('prevent.back')->group(function () {
         Route::resource('guardians', GuardianController::class);
         Route::get('notifications/filter', [NotificationController::class, 'search'])->name('notifications.filter');
         Route::get('notifications', [NotificationController::class,'index'])->name('notifications.index');
+        Route::get('excuse', [AttendanceController::class, 'attendances'])->name('excuse.cancel.index');
+        Route::post('excuse', [AttendanceController::class,'excuseCancel'])->name('excuse.cancel.apply');
     });
     Route::match(['post', 'get'], 'verify', [RfidController::class, 'verify'])->name('verify');
     Route::match(['post', 'get'], 'login', [AuthController::class, 'login'])->name('login');

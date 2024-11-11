@@ -78,6 +78,9 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('holidays.index') }}">Special Occasions</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('excuse.cancel.index') }}">Excuse / Cancel</a>
+            </li>
         </ul>
             @elseif(Auth::user()->isTeacher())
         <ul class="nav flex-column">

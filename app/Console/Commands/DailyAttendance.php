@@ -48,6 +48,18 @@ class DailyAttendance extends Command
 
             if ($todayDate >= $startDate && ($endDate === $startDate || $todayDate <= $endDate)) {
                 $this->info('It\'s a holiday today');
+                foreach (Student::where('school_year_id', $activeSchoolYear->id)->get() as $student) {
+                    Attendance::firstOrCreate(
+                        [
+                            'student_id' => $student->id,
+                            'date' => $todayDate,
+                        ],
+                        [
+                            'status_morning' => 'holiday',
+                            'status_lunch' => 'holiday',
+                        ]
+                    );
+                }
                 return;
             }
 
@@ -62,7 +74,7 @@ class DailyAttendance extends Command
                 ],
                 [
                     'status_morning' => 'absent',
-                    'status_absent' => 'absent',
+                    'status_lunch' => 'absent',
                 ]
             );
         }
