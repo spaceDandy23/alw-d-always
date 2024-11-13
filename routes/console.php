@@ -14,9 +14,9 @@ Artisan::command('inspire', function () {
 // })->purpose('Say hello');
 
 
-Schedule::command('app:daily-attendance')->daily();
-Schedule::command('app:message-parent')->dailyAt('12:00');
-Schedule::command('app:message-parent-lunch')->dailyAt('17:00');
+// Schedule::command('app:daily-attendance')->daily();
+// Schedule::command('app:message-parent')->dailyAt('12:00');
+// Schedule::command('app:message-parent-lunch')->dailyAt('17:00');
 
 
 

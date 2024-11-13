@@ -1,57 +1,62 @@
 @extends('layouts.master')
 
-@section('page_title', 'Attendance')
+@section('page_title', 'Attendance Report')
 
 @section('content')
-
 <div class="row justify-content-center">
     <div class="col">
         <div class="p-4">
+            <!-- Search Form -->
             <form action="{{ route('attendances.reports.filter') }}" method="GET" class="mb-4">
                 @include('partials.search_with_date')
             </form>
         </div>
-        @if(isset($attendances))
-        <table class="table table-striped">
-            <thead>
-                @include('partials.alerts')
-                <tr>
-                    <td colspan="7" class="text-center">
-                        <table class="table table-sm table-bordered">
-                            <thead>
-                                <h3>Total present and absent for {{ $totalNumbers['startDate'] ?? '' }} - {{ $totalNumbers['endDate'] ?? '' }}</h3>
-                                <tr>
-                                    <th scope="col">Total Absent</th>
-                                    <th scope="col">Total Present</th>
-                                    <th scope="col">Total Number Of Students</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>{{ $totalNumbers['overallAbsent'] ?? '0' }}</td>
-                                    <td>{{ $totalNumbers['overallPresent'] ?? '0' }}</td>
-                                    <td>{{ $totalNumbers['totalStudents'] ?? '0' }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="col" colspan="7">Attendance Report</th>
-                </tr>
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col">Grade</th>
-                    <th scope="col">Section</th>
-                    <th scope="col">Total Absents</th>
-                    <th scope="col">Total Presents</th>
-                    <th scope="col">School Year</th>
-                    <th scope="col">Average Days Present (%)</th>
-                </tr>
-            </thead>
-            <tbody>
 
-                @foreach($attendances as $attendance)
+        @if(isset($attendances))
+        <!-- Summary Table -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title text-center">
+                    Attendance Summary for {{ $totalNumbers['startDate'] ?? '' }} - {{ $totalNumbers['endDate'] ?? '' }}
+                </h4>
+                <table class="table table-bordered text-center">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Total Absent</th>
+                            <th>Total Present</th>
+                            <th>Total Number Of Students</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ $totalNumbers['overallAbsent'] ?? '0' }}</td>
+                            <td>{{ $totalNumbers['overallPresent'] ?? '0' }}</td>
+                            <td>{{ $totalNumbers['totalStudents'] ?? '0' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Attendance Report Table -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th colspan="8" class="text-center">Detailed Attendance Report</th>
+                    </tr>
+                    <tr>
+                        <th>Name</th>
+                        <th>Grade</th>
+                        <th>Section</th>
+                        <th>Total Absents</th>
+                        <th>Total Presents</th>
+                        <th>School Year</th>
+                        <th>Average Days Present (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($attendances as $attendance)
                     <tr>
                         <td>{{ $attendance->student->name }}</td>
                         <td>{{ $attendance->student->grade }}</td>
@@ -59,18 +64,18 @@
                         <td>{{ $attendance->total_absent }}</td>
                         <td>{{ $attendance->total_present }}</td>
                         <td>{{ $attendance->student->SchoolYear->year }}</td>
-                        <td>{{ number_format($attendance->average_days_present, 2) * 100 }} %</td>
+                        <td>{{ number_format($attendance->average_days_present * 100, 2) }}%</td>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
         <div class="d-flex justify-content-center">
             {{ $attendances->links('vendor.pagination.bootstrap-5') }}
         </div>
         @else
-        <p>No records filtered</p>
+        <p class="text-center">No records filtered</p>
         @endif
     </div>
 </div>
-
 @endsection

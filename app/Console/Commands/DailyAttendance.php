@@ -47,19 +47,7 @@ class DailyAttendance extends Command
             : now()->setMonth($holiday->end_month)->setDay($holiday->end_day)->format('Y-m-d');
 
             if ($todayDate >= $startDate && ($endDate === $startDate || $todayDate <= $endDate)) {
-                $this->info('It\'s a holiday today');
-                foreach (Student::where('school_year_id', $activeSchoolYear->id)->get() as $student) {
-                    Attendance::firstOrCreate(
-                        [
-                            'student_id' => $student->id,
-                            'date' => $todayDate,
-                        ],
-                        [
-                            'status_morning' => 'holiday',
-                            'status_lunch' => 'holiday',
-                        ]
-                    );
-                }
+                $this->info('no class');
                 return;
             }
 

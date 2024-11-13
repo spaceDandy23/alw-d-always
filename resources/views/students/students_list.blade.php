@@ -93,7 +93,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <form action="{{ route('students.update', $student->id) }}" method="post">
+                                        <form action="{{ route('students.update', $student->id) }}" method="post" id="form_edit">
                                             @csrf
                                             @method('PUT')
 
@@ -164,7 +164,7 @@
     </div>
 </div>
 <!-- Create Student Modal -->
-<div class="modal fade" id="createStudent" tabindex="-1" aria-labelledby="createStudentLabel" aria-hidden="true">
+<!-- <div class="modal fade" id="createStudent" tabindex="-1" aria-labelledby="createStudentLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -227,7 +227,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 <!-- Upload CSV Modal -->
 <div class="modal fade" id="uploadCSV" tabindex="-1" aria-labelledby="uploadCSVLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -261,14 +261,17 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-
-    document.getElementById('start_year').addEventListener('input', function(event){
-
-        document.getElementById('end_year').value = parseInt(event.target.value) + 1;
-
-
+    document.querySelectorAll('#form_edit').forEach(element => {
+        element.addEventListener('keydown', function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+            }
+        });
     });
 
+    document.getElementById('start_year').addEventListener('input', function(event){
+        document.getElementById('end_year').value = parseInt(event.target.value) + 1;
+    });
 });
 </script>
 @endsection

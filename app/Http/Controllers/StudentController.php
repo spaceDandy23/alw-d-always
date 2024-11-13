@@ -8,6 +8,7 @@ use App\Models\SchoolYear;
 use App\Models\Student;
 use App\Models\Tag;
 
+use App\Models\TagHistory;
 use Illuminate\Http\Request;
 use Storage;
 use Illuminate\Support\Facades\DB;
@@ -33,12 +34,15 @@ class StudentController extends Controller
             ]);
             $student = Student::findOrFail($request->student_id);
 
-            if ($student->tag) {
+            if ($student->tag_id) {
                 return back()->with('error', 'The student already has an RFID tag assigned.');
             }
-            Tag::create([
+            $tag = Tag::create([
                 'rfid_tag' => $request->rfid_tag,
-                'student_id' => $student->id,
+            ]);
+
+            $student->update([
+                'tag_id' => $tag->id
             ]);
 
             // $guardian = Guardian::create([
@@ -182,7 +186,7 @@ class StudentController extends Controller
                         'name' => "{$data['last name']}, {$data['first name']} {$data['middle name']}",
                         'grade' => $data['grade'],
                         'section' => $data['section'],
-                        'school_year_id' => $schoolYearRecord->id
+                        'school_year_id' => $schoolYearRecord->id,
                     ],
                     [
                         'created_at' => now(),
@@ -298,7 +302,7 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $students = Student::with('guardians')->where('school_year_id', SchoolYear::where('is_active', true)->first()->id)
+        $students = Student::with('guardians')->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '')
         ->paginate(11);
 
         $relationships = [
@@ -384,7 +388,7 @@ class StudentController extends Controller
     public function update(Request $request, Student $student)
     {
         $request->validate([
-            
+            'rfid_tag' => 'required',
             'name' => 'required|string|max:255',
             'grade' => 'required|integer',
             'section' => 'required|integer',
@@ -394,11 +398,13 @@ class StudentController extends Controller
             'grade' => $request->grade,
             'section' => $request->section,
         ]);
-        Tag::where('student_id', $student->id)
-        ->first()
-        ->update([
-            'rfid_tag' => $request->rfid_tag
+
+        $tag = Tag::updateOrCreate(['rfid_tag' => $request->rfid_tag], ['rfid_tag' => $request->rfid_tag]);
+
+        $student->update([
+            'tag_id' => $tag->id
         ]);
+        TagHistory::create(['student_id' => $student->id, 'rfid_id' => $student->tag->id]);
         return redirect()->route('students.index')->with('success', 'Student edited successfully!');
     }
 

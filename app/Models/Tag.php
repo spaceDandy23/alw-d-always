@@ -9,10 +9,15 @@ class Tag extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['student_id', 'rfid_tag'];
+    protected $fillable = ['rfid_tag'];
 
 
     public function student(){
-        return $this->belongsTo(Student::class);
+        return $this->hasOne(Student::class);
+    }
+
+    public function rfidLogs(){
+
+        return $this->hasMany(RfidLog::class, 'tag_id');
     }
 }

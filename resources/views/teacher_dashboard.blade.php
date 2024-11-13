@@ -7,7 +7,6 @@
     <div class="card mb-4 shadow-lg border-0">
         <div class="card-body bg-light">
             <h5 class="card-title text-center fw-bold text-uppercase text-primary">Recent Attendance Records</h5>
-
             @if($recentAttendanceRecords->isEmpty())
                 <p class="text-muted text-center">No attendance records for today.</p>
             @else

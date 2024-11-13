@@ -14,7 +14,7 @@ class TeacherController extends Controller
     public function index(){
 
 
-        $activeSchoolYear = SchoolYear::latest()->first();
+        $activeSchoolYear = SchoolYear::latest()->first()->id ?? '';
         $studentIds = Auth::user()->students()->pluck('id');
 
         $recentAttendanceRecords = Attendance::whereDate('date', today())->paginate(5);
@@ -24,7 +24,7 @@ class TeacherController extends Controller
         COUNT(CASE WHEN status_lunch = "absent" THEN 1 END) as total_lunch
         '))
         ->whereHas('student', function($q) use($activeSchoolYear){
-            return $q->where('school_year_id', $activeSchoolYear->id);
+            return $q->where('school_year_id', $activeSchoolYear);
         })
         ->whereIn('attendances.student_id', $studentIds)
         ->groupBy('student_id')
@@ -33,12 +33,15 @@ class TeacherController extends Controller
         ->paginate(5);
 
         
+
+
+
         $absentAlot = Attendance::select('student_id', DB::raw('
             SUM(CASE WHEN status_morning = "absent" THEN 0.5 ELSE 0 END) +
             SUM(CASE WHEN status_lunch = "absent" THEN 0.5 ELSE 0 END) as total_absent
         '))
         ->whereHas('student', function($q) use($activeSchoolYear){
-            return $q->where('school_year_id', $activeSchoolYear->id);
+            return $q->where('school_year_id', $activeSchoolYear);
         })
         ->whereIn('attendances.student_id', $studentIds)
         ->having('total_absent', '>=', 5)
@@ -54,7 +57,7 @@ class TeacherController extends Controller
             SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) + SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END)
             AS total_present
         '))
-        ->where('students.school_year_id', $activeSchoolYear->id)
+        ->where('students.school_year_id', $activeSchoolYear)
         ->whereIn('attendances.student_id', $studentIds)
         ->groupBy('students.grade', 'students.section', DB::raw('YEAR(date), MONTH(date)'))
         ->get();
@@ -74,7 +77,7 @@ class TeacherController extends Controller
         
         '))
         ->whereIn('attendances.student_id', $studentIds)
-        ->where('students.school_year_id', $activeSchoolYear->id)
+        ->where('students.school_year_id', $activeSchoolYear)
         ->groupBy('students.grade', 'students.section')
         ->get();
 
@@ -144,7 +147,7 @@ class TeacherController extends Controller
 
             $students = Student::where('grade', $section[0])
             ->where('section', $section[2])
-            ->where('school_year_id', SchoolYear::where('is_active', true)->first()->id)
+            ->where('school_year_id', SchoolYear::latest()->first()->id)
             ->pluck('id');
             if ($students->isNotEmpty()) {
                 foreach ($students as $id) {

@@ -144,12 +144,17 @@
             @if($absentAlot->isEmpty())
                 <p class="text-muted text-center">No students with more than 4 absences.</p>
             @else
+            <form action="{{ route('mass.message.parent') }}" method="POST">
+                @csrf
                 <ul class="list-group list-group-flush">
                     @foreach ($absentAlot as $absent)
                         <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
                             <div>
                                 {{ $absent->student->name }} 
                                 <span class="badge bg-warning">Total Absent: {{ $absent->total_absent }}</span>
+                                <label>
+                                    <input type="checkbox" name="absents[]" value="{{ $absent->student->id }}">
+                                </label>
                             </div>
                             <a href="{{ route('student.profile', $absent->student->id) }}" class="btn btn-outline-primary btn-sm">View Profile</a>
                         </li>
@@ -158,6 +163,12 @@
                 <div class="d-flex justify-content-center mt-3">
                     {{ $absentAlot->links('vendor.pagination.bootstrap-5') }}
                 </div>
+                <div class="mb-3">
+                    <label for="message" class="form-label">Message</label>
+                    <textarea class="form-control" id="message" name="message" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Send Message</button>
+            </form>
             @endif
         </div>
     </div>

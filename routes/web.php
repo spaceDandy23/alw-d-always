@@ -32,8 +32,9 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
         
 
-
+        // Route::post('message/parents', [NotificationController::class,'massMessage'])->name('mass.message.parent');
         Route::post('message/parent/{student}', [NotificationController::class, 'messageParent'])->name('message.parent');
+
 
 
 
@@ -46,10 +47,10 @@ Route::middleware('prevent.back')->group(function () {
 
         Route::put('attendances/{student}', [AttendanceController::class, 'update'])->name('attendances.update');
 
-
+        Route::get('students/filter', [StudentController::class, 'search'])->name('students.filter');
         Route::resource('students', StudentController::class);
 
-        Route::get('students/filter', [StudentController::class, 'search'])->name('students.filter');
+        
         Route::get('student/{student}', [StudentController::class, 'profile'])->name('student.profile');
         Route::get('student/{student}/filter', [StudentController::class,'filterStudentAttendance'])->name('student.filter');
         Route::post('archive', [AdminController::class, 'backupDatabase'])->name('back.up');
@@ -62,6 +63,7 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('notifications', [NotificationController::class,'index'])->name('notifications.index');
         Route::get('excuse', [AttendanceController::class, 'attendances'])->name('excuse.cancel.index');
         Route::post('excuse', [AttendanceController::class,'excuseCancel'])->name('excuse.cancel.apply');
+        Route::post('cancel', [AttendanceController::class, 'cancelClassSession'])->name('cancel.class.session');
     });
     Route::match(['post', 'get'], 'verify', [RfidController::class, 'verify'])->name('verify');
     Route::match(['post', 'get'], 'login', [AuthController::class, 'login'])->name('login');

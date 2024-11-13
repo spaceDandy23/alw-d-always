@@ -24,7 +24,7 @@ class NotificationController extends Controller
         ->paginate(20);
         return view('notifications.notifications_list', compact('notifications'));
     }
-    public function messageParent(Request $request, Student $student){
+    public function messageParent(Student $student, Request $request){
 
         $request->validate([
             'message' => 'required|min:1|max:160|regex:/^[a-zA-Z0-9\s.,?!]+$/'
@@ -107,5 +107,39 @@ class NotificationController extends Controller
 
 
         return view('notifications.notifications_list', compact('notifications'));
+    }
+    public function massMessage(Request $request){
+
+        $students = Student::whereIn('id', $request->absents)->get();
+        foreach($students as $student){
+            foreach($student->guardians as $guardian){
+                $ch = curl_init();
+                $parameters = array(
+                    'apikey' => env('SEMAPHORE_API_KEY'), 
+                    'number' => $guardian->contact_info,
+                    'message' => $request->message,
+                    'sendername' => 'Alwad'
+                );
+        
+                curl_setopt( $ch, CURLOPT_URL,'https://api.semaphore.co/api/v4/messages' );
+                curl_setopt( $ch, CURLOPT_POST, 1 );
+        
+        
+                curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $parameters ) );
+        
+                curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+        
+                $output = curl_exec( $ch );
+                curl_close ($ch);
+        
+                Notification::create([
+                    'guardian_id' => $guardian->id, 
+                    'student_id' => $student->id, 
+                    'message' => $request->message]);
+
+            }
+        }
+
+        return back()->with('success', 'Parents messaged successfully');
     }
 }
