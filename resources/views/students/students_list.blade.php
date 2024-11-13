@@ -96,9 +96,15 @@
                                         <form action="{{ route('students.update', $student->id) }}" method="post" id="form_edit">
                                             @csrf
                                             @method('PUT')
-
-                                            <label for="rfid_tag{{ $student->id }}">Rfid Tag</label>
-                                            <input type="text" class="form-control" id="rfid_tag_{{ $student->id }}" name="rfid_tag" value="{{ $student->tag->rfid_tag ?? '' }}">
+                                            @if (empty($student->tag))
+                                                <div class="alert alert-warning" role="alert">
+                                                    This student does not have a registered RFID tag. Please register an RFID tag before editing.
+                                                </div>
+                                            @endif
+                                            <label for="rfid_tag{{ $student->id }}">Change RFID Tag</label>
+                                            <input type="text" class="form-control" id="rfid_tag_{{ $student->id }}" name="rfid_tag" value="{{ $student->tag->rfid_tag ?? '' }}"  
+                                            
+                                            {{ $student->tag ? '' : 'readonly' }}>
 
 
                                             <label for="name_{{ $student->id }}" class="form-label">Name</label>

@@ -387,24 +387,28 @@ class StudentController extends Controller
      */
     public function update(Request $request, Student $student)
     {
+
         $request->validate([
-            'rfid_tag' => 'required',
             'name' => 'required|string|max:255',
             'grade' => 'required|integer',
             'section' => 'required|integer',
         ]);
+
+
+        if($student->tag){
+            TagHistory::create(['student_id' => $student->id, 'rfid_id' => $student->tag->id]);
+            $tag = Tag::updateOrCreate(['rfid_tag' => $request->rfid_tag], ['rfid_tag' => $request->rfid_tag]);
+            $student->update([
+                'tag_id' => $tag->id
+            ]);
+        }
         $student->update([
             'name' => $request->name,
             'grade' => $request->grade,
             'section' => $request->section,
         ]);
 
-        $tag = Tag::updateOrCreate(['rfid_tag' => $request->rfid_tag], ['rfid_tag' => $request->rfid_tag]);
 
-        $student->update([
-            'tag_id' => $tag->id
-        ]);
-        TagHistory::create(['student_id' => $student->id, 'rfid_id' => $student->tag->id]);
         return redirect()->route('students.index')->with('success', 'Student edited successfully!');
     }
 
