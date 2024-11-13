@@ -76,7 +76,7 @@ class StudentController extends Controller
     public function searchQuery($name, $grade, $section){
         $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
         $setOfNames = explode(' ', $sanitizedName);
-        $schoolYear = SchoolYear::where('is_active', true)->first();
+        $schoolYear = SchoolYear::where('is_active', true)->first()->id ?? '';
         return Student::query()
         ->when($setOfNames, function($q, $setOfNames){
             foreach($setOfNames as $name){
@@ -90,9 +90,8 @@ class StudentController extends Controller
         ->when($section, function($q, $section){
             return $q->where('section', $section);
         })
-        ->when($schoolYear, function($q, $schoolYear){
-            return $q->where('school_year_id',  $schoolYear->id);
-        });
+        ->where('school_year_id',  $schoolYear);
+
 
 
 
@@ -252,6 +251,10 @@ class StudentController extends Controller
         $attendanceRecords = Attendance::where('student_id', $student->id)
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
+        })
+        ->whereHas('student', function($q){
+            return $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
+
         })
         ->orderBy('date', 'asc')
         ->paginate(20)

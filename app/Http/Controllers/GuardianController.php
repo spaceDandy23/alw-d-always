@@ -14,9 +14,9 @@ class GuardianController extends Controller
         $guardianName = $request->input('guardian_name');
         $phoneNumber = $request->input('phone_number');
 
-
-        $guardians = Guardian::whereHas('students', function($query){
-            return $query->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
+        $activeSchoolYear = SchoolYear::where('is_active', true)->first()->id ?? '';
+        $guardians = Guardian::whereHas('students', function($query) use($activeSchoolYear){
+            return $query->where('school_year_id', $activeSchoolYear);
         })
         ->when($guardianName, function ($q, $guardianName){
             return $q->where('name', 'LIKE', "%{$guardianName}%");
@@ -47,8 +47,10 @@ class GuardianController extends Controller
      */
     public function index()
     {
-        $guardians = Guardian::whereHas('students', function ($query) {
-            $query->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
+        
+        $activeSchoolYear = SchoolYear::where('is_active', true)->first()->id ?? '';
+        $guardians = Guardian::whereHas('students', function ($query) use($activeSchoolYear) {
+            $query->where('school_year_id', $activeSchoolYear);
         })
         ->with('students') 
         ->paginate(20);

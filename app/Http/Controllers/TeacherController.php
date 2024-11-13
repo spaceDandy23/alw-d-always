@@ -147,7 +147,7 @@ class TeacherController extends Controller
 
             $students = Student::where('grade', $section[0])
             ->where('section', $section[2])
-            ->where('school_year_id', SchoolYear::latest()->first()->id)
+            ->where('school_year_id', SchoolYear::latest()->first()->id ?? '')
             ->pluck('id');
             if ($students->isNotEmpty()) {
                 foreach ($students as $id) {

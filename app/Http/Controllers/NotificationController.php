@@ -17,7 +17,7 @@ class NotificationController extends Controller
 
         $notifications = Notification::whereHas('guardian', function($q){
             return $q->whereHas('students', function($q){
-                return $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
+                return $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
             });
 
         })

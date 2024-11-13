@@ -25,10 +25,10 @@ class RfidController extends Controller
         ->whereHas('student', function($q){
 
             if(Auth::user()->isAdmin()){
-                return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
+                return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
     
             }
-            return $q->where('students.school_year_id', SchoolYear::latest()->first()->id);
+            return $q->where('students.school_year_id', SchoolYear::latest()->first()->id ?? '');
     
             
     
@@ -55,7 +55,7 @@ class RfidController extends Controller
         $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
         $setOfNames = explode(' ', $sanitizedName);
 
-        $rfidLogs = RfidLog::with(['student.schoolYear', 'tag'])
+        $rfidLogs = RfidLog::with(['student', 'tag'])
         ->when($setOfNames, function($q, $setOfNames) {
             foreach ($setOfNames as $name) {
                 $name = trim($name);
@@ -81,14 +81,14 @@ class RfidController extends Controller
         
         if(Auth::user()->isAdmin()){
             $rfidLogs->whereHas('student', function($q){
-                $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id);
+                $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
 
             });
 
         }
         elseif(Auth::user()->isTeacher()){
             $rfidLogs->whereHas('student', function($q){
-                $q->where('school_year_id', SchoolYear::latest()->first()->id);
+                $q->where('school_year_id', SchoolYear::latest()->first()->id ?? '');
 
             });
 
@@ -233,10 +233,6 @@ class RfidController extends Controller
             $output = curl_exec( $ch );
             curl_close ($ch);
 
-            Notification::create([
-                'guardian_id' => $guardian->id, 
-                'student_id' => $student->id, 
-                'message' => $message]);
 
 
             array_push($outputArr, $guardian);

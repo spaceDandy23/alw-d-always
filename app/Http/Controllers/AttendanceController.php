@@ -51,11 +51,11 @@ class AttendanceController extends Controller
 
 
         if(Auth::user()->isAdmin()){
-            $attendances->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
+            $attendances->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
 
         }
         elseif(Auth::user()->isTeacher()){
-            $attendances->where('students.school_year_id', SchoolYear::latest()->first()->id);
+            $attendances->where('students.school_year_id', SchoolYear::latest()->first()->id ?? '');
 
         }
 
@@ -158,7 +158,7 @@ class AttendanceController extends Controller
         ->whereIn('status_morning', ['excused', 'absent'])
         ->orWhereIn('status_lunch', ['excused', 'absent'])
         ->whereHas('student', function($q){
-            return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id);
+            return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
 
         })
         ->paginate(40);
@@ -204,11 +204,16 @@ class AttendanceController extends Controller
 
 
 
-        if($request->cancel_morning){
+
+
+        if(!$request->cancel_lunch){
             $records->update(['status_morning' => 'present']);
         }
-        elseif($request->cancel_lunch){
-            $records->update(['status_lunch' => 'present']);
+        elseif($request->cancel_lunch && !$request->cancel_morning){
+            $records->where('status_morning', 'present')->update(['status_lunch' => 'present']);
+            $records->each(function($record) {
+                $record->student->rfidLogs()->update(['check_out' => now()->format('12:00:00')]);
+            });
         }
         else{
             $records->update(['status_morning' => 'present',
