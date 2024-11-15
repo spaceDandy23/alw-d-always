@@ -137,23 +137,28 @@ class AdminController extends Controller
         'attendancePerMonth', 'perfectAttendance', 'absentAlot', 'recentAttendanceRecords',
                     'attendanceBySection', 'attendanceTrend', 'activeSchoolYear', 'schoolYears'));
     }
-    public function backupDatabase(){
-
-
+    public function backupDatabase()
+    {
         $databaseName = env('DB_DATABASE');
         $username = env('DB_USERNAME');
         $password = env('DB_PASSWORD'); 
-        $host = env('DB_HOST'); 
-        
+        $backupPath = storage_path('app/backups/backup_' . date('Y_m_d_His'));
+    
+        if (!file_exists(dirname($backupPath))) {
+            mkdir(dirname($backupPath), 0777, true);
+        }
+    
 
-        $backupFile = tempnam(sys_get_temp_dir(), 'backup_') . '.sql';
-        
-        $command = "mysqldump -h $host -u $username -p$password $databaseName > $backupFile";
+        $command = "mysqldump -u $username";
+        if (!empty($password)) {
+            $command .= " -p$password";
+        }
+        $command .= " $databaseName > \"$backupPath\"";
+    
         exec($command);
-        
-        return response()->download($backupFile, 'backup.sql')->deleteFileAfterSend(true);
+    
+        return redirect()->route('dashboard')->with('success', 'Database successfully backed up');
     }
-
 
     public function changeSchoolYear(Request $request){
 

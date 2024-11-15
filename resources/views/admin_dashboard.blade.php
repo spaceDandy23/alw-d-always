@@ -81,29 +81,29 @@
     </button>
 
     <!-- School Year Input Modal -->
-        <div class="modal fade" id="schoolYearModal" tabindex="-1" aria-labelledby="schoolYearModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="schoolYearModalLabel">Back up database</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal fade" id="schoolYearModal" tabindex="-1" aria-labelledby="schoolYearModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="schoolYearModalLabel">Back Up Database</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Important Warning!</strong><br>
+                        If you need to import this backup later or sooner, please contact the developers for assistance.
                     </div>
-                    <div class="modal-body">
-                        <div class="alert alert-warning" role="alert">
-                            <strong>Important Warning!</strong><br>
-                            Bababouie
-                        </div>
-                        <form id="schoolYearForm" action="{{ route('back.up') }}" method="POST">
-                            @csrf
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" form="schoolYearForm" class="btn btn-primary">Save</button>
-                    </div>
+                    <form id="schoolYearForm" action="{{ route('back.up') }}" method="POST">
+                        @csrf
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="schoolYearForm" class="btn btn-primary">Save Backup</button>
                 </div>
             </div>
         </div>
+    </div>
     <h1 class="my-4 text-center display-4">Dashboard</h1>
 
         <!-- Recent Attendance Records -->
