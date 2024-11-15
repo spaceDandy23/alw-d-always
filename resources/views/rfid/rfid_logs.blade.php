@@ -9,11 +9,21 @@
         <div class="p-4">
             <form action="{{ route('logs.filter') }}" method="GET" class="mb-4">
             @include('partials.search_with_date')
+            <div class="row g-3 align-items-center mt-2">
+                <div class="col-auto">
+                    <label for="rfid_tag" class="form-label">RFID Tag</label>
+                </div>
+                <div class="col-3">
+                    <input type="text" name="rfid_tag" id="rfid_tag" class="form-control" placeholder="Enter RFID Tag">
+                </div>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" type="submit">Filter</button>
+            </div>
             </form>
         </div>
         <table class="table table-striped">
             <thead>
-                @include('partials.alerts')
                 <tr>
                     <th scope="col">Student Name</th>
                     <th scope="col">Grade</th>

@@ -63,6 +63,6 @@ class User extends Authenticatable
     }
 
     public function attendanceStudents(){
-        return $this->belongsToMany(Student::class, 'attendance_student_teacher', 'teacher_id', 'student_id');
+        return $this->belongsToMany(Student::class, 'attendance_student_teacher', 'teacher_id', 'student_id')->withPivot('date', 'present', 'time', 'id');
     }
 }

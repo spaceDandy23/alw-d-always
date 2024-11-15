@@ -13,4 +13,15 @@ class TagHistory extends Model
 
 
     protected $fillable = ['student_id', 'rfid_id'];
+
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
+
+    public function tag()
+    {
+        return $this->belongsTo(Tag::class, 'rfid_id');
+    }
 }

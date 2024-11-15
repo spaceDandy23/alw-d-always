@@ -6,8 +6,10 @@ use App\Models\Attendance;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use Auth;
+use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
+use Session;
 
 class TeacherController extends Controller
 {
@@ -83,7 +85,7 @@ class TeacherController extends Controller
 
 
 
-        return view('teacher_dashboard',compact('activeSchoolYear', 
+        return view('teachers.teacher_dashboard',compact('activeSchoolYear', 
         'recentAttendanceRecords', 'absentAlot', 'attendanceTrend', 'attendanceBySection', 'perfectAttendance'));
 
     }
@@ -134,7 +136,7 @@ class TeacherController extends Controller
         });
 
 
-        return view('students.student_teacher_list', compact('studentsGroupedBySection'));
+        return view('teachers.student_teacher_list', compact('studentsGroupedBySection'));
     }
     
     public function storeClass(Request $request){
@@ -202,24 +204,34 @@ class TeacherController extends Controller
             $student->pivot->save();
         });
 
-        return redirect()->route('class.index')->with('success', 'Students Unenrolled');
+        return redirect()->route('class.index')->with('success', 'Class updated');
     }
 
     public function markAttendance(){
+
+
 
         $studentIds = Auth::user()
         ->attendanceStudents()
         ->where('date', now()->format('Y-m-d'))
         ->where('present', true)
         ->get()
-        ->pluck('id');
+        ->pluck('id') ?? [];
 
+
+        $section = Session::get('section');
+        
         $absentStudentIds = Auth::user()
         ->students()
         ->where('enrolled', true)
+        ->where('grade', $section[0])
+        ->where('section', $section[2])
         ->whereNotIn('id',$studentIds)
         ->get()
         ->pluck('id');
+        
+
+
         foreach($absentStudentIds as $id){
             if(!Auth::user()->attendanceStudents()
             ->where('student_id', $id)
@@ -237,5 +249,97 @@ class TeacherController extends Controller
         }
         return redirect()->back()->with('success', 'Attendance Marked');
         
+    }
+    public function classAttendance(){
+
+        $classAttendances = Auth::user()->attendanceStudents()->paginate(30);
+        return view('teachers.class_attendance', compact('classAttendances'));
+
+
+
+    }
+    public function search(Request $request){
+
+
+        $request->validate([        
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i|after_or_equal:start_time',
+        ], [
+            'end_time.after_or_equal' => 'The end time must be a time after or equal to the start time.',
+        ]);
+    
+        $name = $request->input('name');
+        $grade = $request->input('grade');
+        $section = $request->input('section');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $present = $request->input('status');
+        $startTime = $request->input('start_time');
+        $endTime = $request->input('end_time');
+
+        $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
+        $setOfNames = explode(' ', $sanitizedName);
+
+        if ($startTime) {
+            $startTime = Carbon::createFromFormat('H:i', $startTime)->format('H:i'); 
+        }
+    
+        if ($endTime) {
+            $endTime = Carbon::createFromFormat('H:i', $endTime)->format('H:i'); 
+        }
+
+        $classAttendances = Auth::user()->attendanceStudents()
+            ->when($setOfNames, function($q, $setOfNames){
+                foreach ($setOfNames as $name) {
+                    $name = trim($name);
+                    $q->where('name', 'LIKE', "%{$name}%");
+                }
+            })
+            ->when($grade, function($q, $grade){
+                return $q->where('grade', $grade);
+            })
+            ->when($section, function($q, $section) {
+                return $q->where('section', $section);
+            });
+        if ($startDate && $endDate) {
+            $classAttendances->where('date', '>=', $startDate)
+                             ->where('date', '<=', $endDate);
+        } elseif ($startDate) {
+            $classAttendances->where('date', '>=', $startDate);
+        } elseif ($endDate) {
+            $classAttendances->where('date', '<=', $endDate);
+        }
+        if (isset($present)) {
+            $classAttendances->where('present', $present);
+        }
+    
+        if ($startTime && $endTime) {
+            $classAttendances->where('time', '>=', $startTime)
+                             ->where('time', '<=', $endTime);
+        } elseif ($startTime) {
+            $classAttendances->where('time', '>=', $startTime);
+        } elseif ($endTime) {
+            $classAttendances->where('time', '<=', $endTime);
+        }
+        $classAttendances = $classAttendances->paginate(30)
+        ->appends($request->all());
+
+        dd($classAttendances->toArray());
+
+        return view('teachers.class_attendance', compact('classAttendances'));
+    }
+
+    public function updateClassAttendance(Request $request, $id){
+
+
+        Auth::user()->attendanceStudents()
+        ->where('attendance_student_teacher.id', $id)
+        ->update([
+            'present' => $request->present
+        ]);
+
+        return back()->with('success', 'Student updated successfully');
     }
 }

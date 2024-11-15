@@ -9,6 +9,9 @@
             <!-- Search Form -->
             <form action="{{ route('attendances.reports.filter') }}" method="GET" class="mb-4">
                 @include('partials.search_with_date')
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="submit">Filter</button>
+                </div>
             </form>
         </div>
 

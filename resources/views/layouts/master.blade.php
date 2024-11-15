@@ -94,7 +94,10 @@
                     <a class="nav-link" href="{{ route('attendances.index') }}">Attendances</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('class.index') }}">Create Class</a>
+                    <a class="nav-link" href="{{ route('class.index') }}">Classes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('class.attendance.index') }}">Your Class Attendances</a>
                 </li>
         </ul>
 

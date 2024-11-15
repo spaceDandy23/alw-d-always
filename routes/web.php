@@ -76,7 +76,10 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
         Route::post('mark', [TeacherController::class, 'markAttendance'])->name('mark.attendance');
         Route::get('dashboard', [TeacherController::class, 'index'])->name('teacher.dashboard');
+        Route::get('class/attendance', [TeacherController::class, 'classAttendance'])->name('class.attendance.index');
+        Route::get('class/attendance/filter', [TeacherController::class, 'search'])->name('class.filter');
         Route::get('class', [TeacherController::class, 'classIndex'])->name('class.index');
+        Route::put('class/{student}', [TeacherController::class,'updateClassAttendance'])->name('class.attendance.update');
         Route::post('class/store', [TeacherController::class, 'storeClass'])->name('create.class');
         Route::post('class/unenroll/students', [TeacherController::class, 'unenrollStudent'])->name('unenroll.student');
         Route::post('class/delete', [TeacherController::class, 'removeClass'])->name('class.delete');

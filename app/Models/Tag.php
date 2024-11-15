@@ -20,4 +20,9 @@ class Tag extends Model
 
         return $this->hasMany(RfidLog::class, 'tag_id');
     }
+
+    public function tagHistories()
+    {
+        return $this->hasMany(TagHistory::class, 'rfid_id'); 
+    }
 }

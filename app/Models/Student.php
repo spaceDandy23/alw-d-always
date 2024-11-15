@@ -23,7 +23,7 @@ class Student extends Model
     }
     public function attendanceTeachers(){
 
-        return $this->belongsToMany(User::class, 'attendance_student_teacher', 'student_id', 'teacher_id');
+        return $this->belongsToMany(User::class, 'attendance_student_teacher', 'student_id', 'teacher_id')->withPivot('present', 'date','time', 'id');
 
     }
 
@@ -43,5 +43,8 @@ class Student extends Model
     }
     public function schoolYear(){
         return $this->belongsTo(SchoolYear::class);
+    }
+    public function tagHistories(){
+        return $this->hasMany(TagHistory::class);
     }
 }

@@ -140,13 +140,18 @@ class AdminController extends Controller
     public function backupDatabase(){
 
 
-        
         $databaseName = env('DB_DATABASE');
         $username = env('DB_USERNAME');
-        $command = "mysqldump -u $username $databaseName > \"C:\\Users\\igor\\OneDrive\\Desktop\\backup.sql\"";
-        exec($command);
+        $password = env('DB_PASSWORD'); 
+        $host = env('DB_HOST'); 
+        
 
-        return redirect()->route('dashboard');
+        $backupFile = tempnam(sys_get_temp_dir(), 'backup_') . '.sql';
+        
+        $command = "mysqldump -h $host -u $username -p$password $databaseName > $backupFile";
+        exec($command);
+        
+        return response()->download($backupFile, 'backup.sql')->deleteFileAfterSend(true);
     }
 
 

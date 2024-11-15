@@ -16,7 +16,7 @@
         <div class='card-body' id="card_body">
             @include('partials.csrf_and_routes')
             <div id="alert_notif">
-
+                @include('partials.alerts')
             </div>
             <h5 class='card-title'>Student Details</h5>
             <p class='card-text'>Name: <span id="name"></span></p>
@@ -30,12 +30,15 @@
                 <button class='btn btn-primary' type='submit'>Verify</button>
             </form>
         </div>
+        @if(!Auth::user()->isAdmin())
         <form action="{{ route('mark.attendance') }}" method="POST">
             @csrf
             <ul id="list_students">
+                <li class="text-muted">No students present so far...</li>
+                <button type="submit" class="btn btn-primary mb-2" id="mark_attendance">Mark attendance</button>
             </ul>
         </form>
-
+        @endif
     </div>
 </div>
 <table>
@@ -45,6 +48,27 @@
 </table>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+
+        console.log("{{$section}}");
+        if(sessionStorage.getItem('section') !== "{{ $section }}"){
+            sessionStorage.clear();
+        }
+        sessionStorage.setItem('section', "{{ $section }}");
+
+
+        if(sessionStorage.getItem('{{ Auth::user()->id }}')){
+            generateStudents(JSON.parse(sessionStorage.getItem('{{ Auth::user()->id }}')));
+        } 
+
+
+        window.addEventListener('beforeunload', function (event) {
+        sessionStorage.removeItem('{{ Auth::user()->id }}');  
+
+    });
+
+        
+
+
         document.getElementById('rfid_field').focus();
         let alertNotif = document.getElementById('alert_notif');
         let routesAndToken = {
@@ -55,11 +79,10 @@
 
         document.getElementById('tag_form').addEventListener('submit', (event) => {
             event.preventDefault();
-            
-
+        
 
             let formData = new FormData(document.getElementById('tag_form'));
-            let studentList = ``;
+            formData.append('section', "{{ $section }}");
             fetch(routesAndToken.verify, {
                 method: 'post',
                 headers: {
@@ -89,16 +112,8 @@
                             sessionStudents[data.student.id] = data.student;
                             sessionStorage.setItem('{{ Auth::user()->id }}', JSON.stringify(sessionStudents));
                         }
+                        generateStudents(sessionStudents);
 
-                            Object.values(sessionStudents).forEach(($value) => {
-                                studentList += `<li> ${$value.name} </li>`;
-                            });
-                            studentList ? studentList += `<button type="submit" class="btn btn-primary mb-2" id="mark_attendance">Mark attendance</button>` : ``;
-                        document.getElementById('list_students').innerHTML = studentList;
-                        document.getElementById('mark_attendance').addEventListener('click', function() {
-
-                            sessionStorage.clear();
-                        });
                     }
                 }
                 else{
@@ -115,6 +130,16 @@
             document.getElementById('name').innerText = data.student.name;
             document.getElementById('grade').innerText = data.student.grade;
             document.getElementById('section').innerText = data.student.section;
+            
+        }
+        function generateStudents(sessionStudents = {}){
+            let studentList = ``;
+            Object.values(sessionStudents).forEach(($value) => {
+                studentList += `<li> ${$value.name} </li>`;
+            });
+            studentList ? studentList += `<button type="submit" class="btn btn-primary mb-2" id="mark_attendance">Mark attendance</button>` : ``;
+            document.getElementById('list_students').innerHTML = studentList;
+
         }
     });
 </script>

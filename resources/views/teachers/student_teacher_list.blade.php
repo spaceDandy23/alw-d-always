@@ -58,8 +58,12 @@
                 <div class="card mb-4">
                     <div class="card-header">
                         <h4 style="cursor: pointer;" onclick="toggleSection('{{ $section }}')">Section: {{ $section }}</h4>
-                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteSectionModal{{ $section }}">Delete</button>
-                        <a href="{{ route('verify') }}" class="btn btn-primary btn-sm">Check Attendance</a>
+                        <button type="button" class="btn btn-danger btn-sm mb-2" data-bs-toggle="modal" data-bs-target="#deleteSectionModal{{ $section }}">Delete</button>
+
+                        <form action="{{ route('verify') }}" method="GET">
+                            <input type="hidden" value="{{ $section }}" name="section">
+                            <button type="submit" class="btn btn-primary btn-sm">Check Attendance</button>
+                        </form>
                     </div>
 
                     <div class="card-body" id="section-{{ $section }}" style="display: none;">

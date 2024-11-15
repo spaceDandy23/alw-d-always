@@ -26,11 +26,7 @@ class StudentController extends Controller
                 'last_name' => 'required|string|max:255', 
                 'grade' => 'required|integer|min:7|max:10',
                 'section' => 'required|integer|min:1|max:3',
-                
-                // 'guardian_first_name' => 'required|string|max:255', 
-                // 'guardian_last_name' => 'required|string|max:255', 
-                // 'relationship' => 'required|string|max:50', 
-                // 'phone_number' => 'nullable|string|max:15',
+
             ]);
             $student = Student::findOrFail($request->student_id);
 
@@ -81,7 +77,7 @@ class StudentController extends Controller
         ->when($setOfNames, function($q, $setOfNames){
             foreach($setOfNames as $name){
                 $name = trim($name);
-                $q->orWhere('name', 'LIKE', "%{$name}%");
+                $q->where('name', 'LIKE', "%{$name}%");
             }
         })
         ->when($grade, function($q, $grade){
@@ -107,7 +103,7 @@ class StudentController extends Controller
 
 
         
-            $studentQuery = $this->searchQuery($name, $grade, $section)->paginate(5);
+            $studentQuery = $this->searchQuery($name, $grade, $section)->where('tag_id', '=', NULL)->paginate(5);
 
 
             return response()->json([

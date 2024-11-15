@@ -12,6 +12,7 @@ use App\Models\Tag;
 use Auth;
 use Illuminate\Http\Request;
 use App\Models\Notification;
+use Session;
 
 
 
@@ -50,16 +51,17 @@ class RfidController extends Controller
         $name = $request->input('name');
         $grade = $request->input('grade');
         $section = $request->input('section');
-
+        $rfidTag = $request->rfid_tag;
 
         $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
         $setOfNames = explode(' ', $sanitizedName);
+
 
         $rfidLogs = RfidLog::with(['student', 'tag'])
         ->when($setOfNames, function($q, $setOfNames) {
             foreach ($setOfNames as $name) {
                 $name = trim($name);
-                $q->orWhereHas('student', function ($query) use ($name) {
+                $q->whereHas('student', function ($query) use ($name) {
                     $query->where('name', 'LIKE', "%{$name}%");
                 });
             }
@@ -76,6 +78,11 @@ class RfidController extends Controller
         })
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
+        })
+        ->when($rfidTag, function ($q, $rfidTag){
+            return $q->whereHas('tag', function($q) use($rfidTag){
+                $q->where('rfid_tag', $rfidTag);
+            });
         });
 
         
@@ -211,7 +218,10 @@ class RfidController extends Controller
         }
 
 
-        return view('rfid.rfid_scan');
+        $section = $request->section;
+        
+        Session::put('section', $section);
+        return view('rfid.rfid_scan', compact('section'));
 
 
     }
@@ -249,6 +259,7 @@ class RfidController extends Controller
 
     public function verifyFromTeacher($request){
 
+
         $tag = Tag::where('rfid_tag', $request->rfid_tag)->first();
         if(!$tag){
             return response()->json([
@@ -260,12 +271,30 @@ class RfidController extends Controller
 
         $student = Auth::user()
         ->students()
-        ->when($tag, function($q, $tag){
-            return $q->where('tag_id', $tag->id);
-        })
-        ->first();
+        ->where('tag_id', $tag->id)
+        ->where('enrolled', 1);
+
+
+        if(!$student){
+            return response()->json([
+                'success' => false,
+                'message' => 'Student not enrolled in this class',
+            ]);
+
+        }
 
         
+        $student
+        ->where('grade', $request->section[0])
+        ->where('section', $request->section[2]);
+        $student = $student->first();
+
+        if(!$student){
+            return response()->json([
+                'success' => false,
+                'message' => 'Student does not exist in this section',
+            ]);
+        }
 
         $isExist = Auth::user()->attendanceStudents()
         ->where('date', now()->format('Y-m-d'))

@@ -9,21 +9,28 @@ class AuthController extends Controller
 {
     //
 
-    public function login(Request $request){
-        if($request->isMethod('POST')){
+    public function login(Request $request)
+    {
+        if ($request->isMethod('POST')) {
             $validatedData = $request->validate([
                 'email' => 'required|email|exists:users,email',
-                'password' => 'required|min:8',
+                'password' => 'required|min:8', 
             ]);
-            if (Auth::attempt($validatedData)  && Auth::user()->isAdmin() ){
-                $request->session()->regenerate();
-                return redirect()->route('dashboard');
+    
+            if (Auth::attempt(['email' => $validatedData['email'], 'password' => $validatedData['password']])) {
+                if (Auth::user()->isAdmin()) {
+                    $request->session()->regenerate();
+                    return redirect()->route('dashboard');
+                }
+                elseif (Auth::user()->isTeacher()) {
+                    $request->session()->regenerate();
+                    return redirect()->route('teacher.dashboard');
+                }
+            } else {
+                return back()->withErrors(['password' => 'The provided password is incorrect.']);
             }
-            else{
-                return redirect()->route('teacher.dashboard');
-            }
-
         }
+
         return view('authentication.login');
     }
     public function logout(Request $request){

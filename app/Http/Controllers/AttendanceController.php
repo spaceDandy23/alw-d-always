@@ -29,7 +29,7 @@ class AttendanceController extends Controller
         ->when($setOfNames, function($q, $setOfNames){
             foreach($setOfNames as $name){
                 $name = trim($name);
-                $q->orWhere('students.name', 'LIKE', "%{$name}%");
+                $q->where('students.name', 'LIKE', "%{$name}%");
             }
 
         })

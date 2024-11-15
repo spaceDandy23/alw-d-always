@@ -31,7 +31,7 @@
     </div>
     <div class="card mb-4 shadow-lg border-0">
         <div class="card-body bg-light">
-            <h5 class="card-title text-center fw-bold text-uppercase text-success">Students With Perfect Attendance From Watchlist</h5>
+            <h5 class="card-title text-center fw-bold text-uppercase text-success">Students With Perfect Attendance</h5>
             @if($perfectAttendance->isEmpty())
                 <p class="text-muted text-center">No students have perfect attendance.</p>
             @else
@@ -48,7 +48,7 @@
     </div>
     <div class="card mb-4 shadow-lg border-0">
         <div class="card-body bg-light">
-            <h5 class="card-title text-center fw-bold text-uppercase text-warning">Students with Frequent Absences From Watchlist</h5>
+            <h5 class="card-title text-center fw-bold text-uppercase text-warning">Students with Frequent Absences</h5>
             @if($absentAlot->isEmpty())
                 <p class="text-muted text-center">No students with more than 4 absences.</p>
             @else

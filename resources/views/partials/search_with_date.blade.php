@@ -1,4 +1,5 @@
 <div class="row g-3 align-items-center">
+    @include('partials.alerts')
     <div class="col-auto">
         <label for="name" class="form-label">Student Name</label>
     </div>
@@ -40,8 +41,5 @@
     </div>
     <div class="col">
         <input id="end_date" type="date" name="end_date" class="form-control">
-    </div>
-    <div class="col-auto">
-        <button class="btn btn-primary" type="submit">Filter</button>
     </div>
 </div>
