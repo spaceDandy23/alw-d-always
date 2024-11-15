@@ -9,18 +9,17 @@
         <div class="p-4 text-center">
             @include('partials.alerts')
             <button type="button" class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#addSectionModal">
-                Add Watch List
+                Add Class
             </button>
         </div>
 
-        <!-- Add Section Modal -->
         <div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
-                    <form action="{{ route('watchlist.store') }}" method="POST">
+                    <form action="{{ route('create.class') }}" method="POST">
                         @csrf
                         <div class="modal-header">
-                            <h5 class="modal-title" id="addSectionModalLabel">Add Section to Watch List</h5>
+                            <h5 class="modal-title" id="addSectionModalLabel">Select section for class</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         
@@ -47,7 +46,7 @@
                         
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add Sections to Watch List</button>
+                            <button type="submit" class="btn btn-primary">Add</button>
                         </div>
                     </form>
                 </div>
@@ -60,6 +59,7 @@
                     <div class="card-header">
                         <h4 style="cursor: pointer;" onclick="toggleSection('{{ $section }}')">Section: {{ $section }}</h4>
                         <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteSectionModal{{ $section }}">Delete</button>
+                        <a href="{{ route('verify') }}" class="btn btn-primary btn-sm">Check Attendance</a>
                     </div>
 
                     <div class="card-body" id="section-{{ $section }}" style="display: none;">
@@ -71,26 +71,42 @@
                                     <th>Section</th>
                                     <th>Average times present</th>
                                     <th>Average times absent</th>
-                                    <th>View Recent Activity</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @foreach($students as $student)
-                                    <tr>
-                                        <td>{{ $student->name }}</td>
-                                        <td>{{ $student->grade }}</td>
-                                        <td>{{ $student->section }}</td>
-                                        <td>{{ $student->average_present }} %</td>
-                                        <td>{{ $student->average_absent }} %</td>
-                                        <td>
-                                            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#viewRecentActivityModal{{ $student->id }}">
-                                                View
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
+                            <form action="{{ route('unenroll.student') }}" method="POST">
+                                @csrf
+                                <tbody>
+                                    @foreach($students as $student)
+                                        <tr>
+                                            <td>{{ $student->name }}</td>
+                                            <td>{{ $student->grade }}</td>
+                                            <td>{{ $student->section }}</td>
+                                            <td>{{ $student->average_present }} % </td>
+                                            <td>{{ $student->average_absent }} % </td>
+                                            <td>
+                                                <button type="button" class="btn btn-info btn-sm mb-2" data-bs-toggle="modal" data-bs-target="#viewRecentActivityModal{{ $student->id }}">
+                                                    View Recent Activities
+                                                </button>
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <label class="form-check-label me-2">
+                                                        <input type="hidden" name="students[{{ $student->id }}]" value="1">
+                                                        <input type="checkbox" name="students[{{ $student->id }}]" value="0" class="form-check-input"
+                                                        {{ $student->pivot->enrolled === 1 ? '' : 'checked'}}>
+                                                        {{ $student->pivot->enrolled === 1 ? 'Unenroll Student': 'Unenrolled'}}
+                                                    </label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
                         </table>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-danger btn-sm">Save changes</button>
+                        </div>
+
+                        </form>
                     </div>
                 </div>
 
@@ -98,7 +114,7 @@
                 <div class="modal fade" id="deleteSectionModal{{ $section }}" tabindex="-1" aria-labelledby="deleteSectionModalLabel{{ $section }}" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
-                            <form action="{{ route('watchlist.delete') }}" method="POST">
+                            <form action="{{ route('class.delete') }}" method="POST">
                                 @csrf
                                 <input type="hidden" value="{{ $section }}" name="section">
                                 <div class="modal-header">
@@ -116,6 +132,7 @@
                         </div>
                     </div>
                 </div>
+
                 @foreach($students as $student)
                     <div class="modal fade" id="viewRecentActivityModal{{ $student->id }}" tabindex="-1" aria-labelledby="viewRecentActivityModalLabel{{ $student->id }}" aria-hidden="true">
                         <div class="modal-dialog modal-xl">

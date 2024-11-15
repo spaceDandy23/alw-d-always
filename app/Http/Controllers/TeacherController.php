@@ -87,7 +87,7 @@ class TeacherController extends Controller
         'recentAttendanceRecords', 'absentAlot', 'attendanceTrend', 'attendanceBySection', 'perfectAttendance'));
 
     }
-    public function listIndex(){
+    public function classIndex(){
 
 
         $studentsGroupedBySection = Auth::user()->students->groupBy(function ($student) {
@@ -110,6 +110,7 @@ class TeacherController extends Controller
                 ->value('absent_count');
 
 
+
                 $averagePresent = $attendanceCount > 0 ? round(($presentCount / $attendanceCount), 3) * 100 : 0;
 
 
@@ -128,15 +129,15 @@ class TeacherController extends Controller
 
                 
             });
-            
+
 
         });
 
 
-        return view('students.watch_list', compact('studentsGroupedBySection'));
+        return view('students.student_teacher_list', compact('studentsGroupedBySection'));
     }
     
-    public function storeWatchlist(Request $request){
+    public function storeClass(Request $request){
         $sections = $request->input('sections', []);
 
         if(!$sections){
@@ -164,12 +165,12 @@ class TeacherController extends Controller
         }
         
         
-        return redirect()->route('list.index')->with('success','Section added successfully');
+        return redirect()->route('class.index')->with('success','Section added successfully');
 
 
     }
 
-    public function removeList(Request $request){
+    public function removeClass(Request $request){
 
         $user = Auth::user();
         $studentIds = $user->students()
@@ -180,7 +181,61 @@ class TeacherController extends Controller
         $user->students()->detach($studentIds);
 
 
-        return redirect()->route('list.index')->with('success', 'Watchlist deleted');
+        return redirect()->route('class.index')->with('success', 'Watchlist deleted');
 
+    }
+
+    public function unenrollStudent(Request $request){
+
+
+        if(!$request->students){
+            return redirect()->route('class.index')->with('error', 'Fill in at least one checkbox');
+
+        }
+        
+        Auth::user()
+        ->students()
+        ->whereIn('student_id',array_keys($request->students))
+        ->each(function($student) use($request){
+
+            $student->pivot->enrolled = (bool) $request->students[$student->id];
+            $student->pivot->save();
+        });
+
+        return redirect()->route('class.index')->with('success', 'Students Unenrolled');
+    }
+
+    public function markAttendance(){
+
+        $studentIds = Auth::user()
+        ->attendanceStudents()
+        ->where('date', now()->format('Y-m-d'))
+        ->where('present', true)
+        ->get()
+        ->pluck('id');
+
+        $absentStudentIds = Auth::user()
+        ->students()
+        ->where('enrolled', true)
+        ->whereNotIn('id',$studentIds)
+        ->get()
+        ->pluck('id');
+        foreach($absentStudentIds as $id){
+            if(!Auth::user()->attendanceStudents()
+            ->where('student_id', $id)
+            ->where('date', now()->format('Y-m-d'))->first()){
+                Auth::user()->attendanceStudents()->attach($id, [
+                    'created_at' => now(),
+                    'updated_at'=> now(),
+                    'date' => now()->format('Y-m-d'),
+                    'time' => now()->format('H:i:s'),
+                    'present' => false,
+                    'student_id' => $id,
+                    'teacher_id' => Auth::id()
+                ]);
+            }
+        }
+        return redirect()->back()->with('success', 'Attendance Marked');
+        
     }
 }

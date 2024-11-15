@@ -30,8 +30,19 @@
                 <button class='btn btn-primary' type='submit'>Verify</button>
             </form>
         </div>
+        <form action="{{ route('mark.attendance') }}" method="POST">
+            @csrf
+            <ul id="list_students">
+            </ul>
+        </form>
+
     </div>
 </div>
+<table>
+
+
+
+</table>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('rfid_field').focus();
@@ -48,7 +59,7 @@
 
 
             let formData = new FormData(document.getElementById('tag_form'));
-
+            let studentList = ``;
             fetch(routesAndToken.verify, {
                 method: 'post',
                 headers: {
@@ -66,9 +77,32 @@
                     console.log(data);
                     console.log(data.message);
                     showStudentVerified(data);
+                    
+                    if(data.from_teacher){
+
+                        let sessionStudents = JSON.parse(sessionStorage.getItem('{{ Auth::user()->id }}')) || {};
+                        if (!sessionStudents[data.student.id]) {
+                            sessionStudents[data.student.id] = data.student;
+                            sessionStorage.setItem('{{ Auth::user()->id }}', JSON.stringify(sessionStudents));
+                        }
+                        else{
+                            sessionStudents[data.student.id] = data.student;
+                            sessionStorage.setItem('{{ Auth::user()->id }}', JSON.stringify(sessionStudents));
+                        }
+
+                            Object.values(sessionStudents).forEach(($value) => {
+                                studentList += `<li> ${$value.name} </li>`;
+                            });
+                            studentList ? studentList += `<button type="submit" class="btn btn-primary mb-2" id="mark_attendance">Mark attendance</button>` : ``;
+                        document.getElementById('list_students').innerHTML = studentList;
+                        document.getElementById('mark_attendance').addEventListener('click', function() {
+
+                            sessionStorage.clear();
+                        });
+                    }
                 }
                 else{
-                    console.log(data.message);
+                     console.log(data.message);
                 }
 
             })

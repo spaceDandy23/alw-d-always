@@ -32,10 +32,8 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
         
 
-        // Route::post('message/parents', [NotificationController::class,'massMessage'])->name('mass.message.parent');
+        Route::post('message/parents', [NotificationController::class,'massMessage'])->name('mass.message.parent');
         Route::post('message/parent/{student}', [NotificationController::class, 'messageParent'])->name('message.parent');
-
-
 
 
 
@@ -76,11 +74,13 @@ Route::middleware('prevent.back')->group(function () {
 
         Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.reports.filter');
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
-        
+        Route::post('mark', [TeacherController::class, 'markAttendance'])->name('mark.attendance');
         Route::get('dashboard', [TeacherController::class, 'index'])->name('teacher.dashboard');
-        Route::get('list', [TeacherController::class, 'listIndex'])->name('list.index');
-        Route::post('list', [TeacherController::class, 'storeWatchlist'])->name('watchlist.store');
-        Route::post('list/delete', [TeacherController::class, 'removeList'])->name('watchlist.delete');
+        Route::get('class', [TeacherController::class, 'classIndex'])->name('class.index');
+        Route::post('class/store', [TeacherController::class, 'storeClass'])->name('create.class');
+        Route::post('class/unenroll/students', [TeacherController::class, 'unenrollStudent'])->name('unenroll.student');
+        Route::post('class/delete', [TeacherController::class, 'removeClass'])->name('class.delete');
+        Route::post('class/add', [TeacherController::class, 'addStudent'])->name('class.add.student');
     });
 });
 

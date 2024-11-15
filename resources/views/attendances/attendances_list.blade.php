@@ -49,8 +49,8 @@
                         <th>Name</th>
                         <th>Grade</th>
                         <th>Section</th>
-                        <th>Total Absents</th>
-                        <th>Total Presents</th>
+                        <th>Total Number Of Days Absent</th>
+                        <th>Total Number Of Days Present</th>
                         <th>School Year</th>
                         <th>Average Days Present (%)</th>
                     </tr>

@@ -94,7 +94,7 @@
                     <a class="nav-link" href="{{ route('attendances.index') }}">Attendances</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('list.index') }}">Watch List</a>
+                    <a class="nav-link" href="{{ route('class.index') }}">Create Class</a>
                 </li>
         </ul>
 

@@ -109,11 +109,17 @@ class RfidController extends Controller
     public function verify(Request $request){
 
         if($request->isMethod('post')){
+
+
+            if(Auth::user()->isTeacher()){
+                return $this->verifyFromTeacher($request);
+            }
+
             $currentHour = now()->format('H');
             // if ($currentHour <= 17 && $currentHour > 6) {
                 if(true){
                 $activeSchoolYear = SchoolYear::latest()->first();
-
+                
                 
                 $tag = Tag::where('rfid_tag', $request->rfid_tag)->first();
                 if(!$tag){
@@ -196,13 +202,14 @@ class RfidController extends Controller
 
                 ]);
             }
-            return response()->json([
-                'success' => false,
-                'message'=> 'di pwede',
+            // return response()->json([
+            //     'success' => false,
+            //     'message'=> 'di pwede',
 
-            ]);
+            // ]);
             
         }
+
 
         return view('rfid.rfid_scan');
 
@@ -238,5 +245,58 @@ class RfidController extends Controller
             array_push($outputArr, $guardian);
         }
         return $outputArr;
+    }
+
+    public function verifyFromTeacher($request){
+
+        $tag = Tag::where('rfid_tag', $request->rfid_tag)->first();
+        if(!$tag){
+            return response()->json([
+                'success' => false,
+                'message' => 'tag not registered'
+            ]);
+        }
+
+
+        $student = Auth::user()
+        ->students()
+        ->when($tag, function($q, $tag){
+            return $q->where('tag_id', $tag->id);
+        })
+        ->first();
+
+        
+
+        $isExist = Auth::user()->attendanceStudents()
+        ->where('date', now()->format('Y-m-d'))
+        ->where('student_id', $student->id)
+        ->first();
+
+        if(!$isExist){
+            Auth::user()->attendanceStudents()->attach($student->id, [
+                'created_at' => now(),
+                'updated_at'=> now(),
+                'date' => now()->format('Y-m-d'),
+                'time' => now()->format('H:i:s'),
+                'present' => true,
+                'student_id' => $student->id,
+                'teacher_id' => Auth::id()
+            ]);
+        }
+
+        else{
+            Auth::user()
+            ->attendanceStudents()
+            ->where('student_id', $student->id)
+            ->update(['present' => true]);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Success',
+            'student' => $student,
+            'from_teacher' => true,
+
+        ]);
+
     }
 }
