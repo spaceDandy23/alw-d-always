@@ -55,14 +55,16 @@ class User extends Authenticatable
         return $this->role === 'teacher';
     }
 
+    public function sectionAttendances()
+    {
+        return $this->hasMany(AttendanceSectionTeacher::class,'teacher_id');
+    }
     public function students(){
-
-        return $this->belongsToMany(Student::class, 'student_teacher', 'teacher_id', 'student_id')->withPivot('enrolled');
-
-
+        return $this->belongsToMany(Student::class, 'student_teacher', 'teacher_id', 'student_id')
+        ->withPivot('enrolled')
+        ->withTimestamps();
     }
+    
 
-    public function attendanceStudents(){
-        return $this->belongsToMany(Student::class, 'attendance_student_teacher', 'teacher_id', 'student_id')->withPivot('date', 'present', 'time', 'id');
-    }
+
 }

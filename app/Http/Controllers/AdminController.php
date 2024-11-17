@@ -104,38 +104,43 @@ class AdminController extends Controller
         $recentAttendanceRecords = Attendance::whereDate('date', today())->paginate(5);
 
         $attendanceBySection = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
-        ->select('students.grade', 'students.section', DB::raw('
+        ->join('sections', 'students.section_id', '=', 'sections.id') 
+        ->select(DB::raw('
+            CONCAT(sections.grade, " - ", sections.section) as section_name, 
             (
-            SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END) +
-            SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END)
-            )/(
-            SUM(CASE WHEN status_lunch IN ("present", "absent") THEN 0.5 ELSE 0 END) +
-            SUM(CASE WHEN status_morning IN ("present", "absent") THEN 0.5 ELSE 0 END)
-            ) as section_overall
-        
+                SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END) +
+                SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END)
+            ) / (
+                SUM(CASE WHEN status_lunch IN ("present", "absent") THEN 0.5 ELSE 0 END) +
+                SUM(CASE WHEN status_morning IN ("present", "absent") THEN 0.5 ELSE 0 END)
+            ) AS section_overall
         '))
         ->where('students.school_year_id', $activeSchoolYear->id)
-        ->groupBy('students.grade', 'students.section')
+        ->groupBy('sections.id','sections.grade', 'sections.section') 
         ->get();
-
 
         $attendanceTrend = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
-        ->select('students.grade', 'students.section', DB::raw('
-            YEAR(date) as year, 
-            MONTH(date) as month,
-            SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) + SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END)
-            AS total_present
-        '))
+        ->join('sections', 'students.section_id', '=', 'sections.id')
+        ->select(
+            DB::raw('
+                CONCAT(sections.grade, " - ", sections.section) as section_name, 
+                YEAR(date) as year, 
+                MONTH(date) as month,
+                SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) + 
+                SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END) AS total_present
+            ')
+        )
         ->where('students.school_year_id', $activeSchoolYear->id)
-        ->groupBy('students.grade', 'students.section', DB::raw('YEAR(date), MONTH(date)'))
+        ->groupBy('sections.grade', 'sections.section', DB::raw('YEAR(date), MONTH(date)')) 
         ->get();
+
 
 
         $schoolYears = SchoolYear::all();
         
-        return view('admin_dashboard', compact('overallAttendanceSummary', 
+        return view('admin_dashboard', compact('overallAttendanceSummary', 'attendanceTrend',
         'attendancePerMonth', 'perfectAttendance', 'absentAlot', 'recentAttendanceRecords',
-                    'attendanceBySection', 'attendanceTrend', 'activeSchoolYear', 'schoolYears'));
+                    'attendanceBySection', 'activeSchoolYear', 'schoolYears'));
     }
     public function backupDatabase()
     {

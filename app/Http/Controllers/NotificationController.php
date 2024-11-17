@@ -96,8 +96,8 @@ class NotificationController extends Controller
             });
         })
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
-            return $q->where('notifications.created_at', '>=', $startDate)
-                      ->where('notifications.created_at', '<=', $endDate);
+            return $q->where('notifications.date', '>=', $startDate)
+                      ->where('notifications.date', '<=', $endDate);
         })
         ->paginate(20)
         ->appends($request->all());

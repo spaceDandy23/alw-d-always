@@ -49,11 +49,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
-        console.log("{{$section}}");
-        if(sessionStorage.getItem('section') !== "{{ $section }}"){
+        console.log("{{$sectionId}}");
+        console.log(sessionStorage.getItem('section'));
+        if(sessionStorage.getItem('section') !== "{{ $sectionId }}"){
             sessionStorage.clear();
         }
-        sessionStorage.setItem('section', "{{ $section }}");
+        sessionStorage.setItem('section', "{{ $sectionId }}");
 
 
         if(sessionStorage.getItem('{{ Auth::user()->id }}')){
@@ -61,10 +62,6 @@
         } 
 
 
-        window.addEventListener('beforeunload', function (event) {
-        sessionStorage.removeItem('{{ Auth::user()->id }}');  
-
-    });
 
         
 
@@ -82,7 +79,7 @@
         
 
             let formData = new FormData(document.getElementById('tag_form'));
-            formData.append('section', "{{ $section }}");
+            formData.append('section', "{{ $sectionId }}");
             fetch(routesAndToken.verify, {
                 method: 'post',
                 headers: {
@@ -128,8 +125,8 @@
         function showStudentVerified(data) {
 
             document.getElementById('name').innerText = data.student.name;
-            document.getElementById('grade').innerText = data.student.grade;
-            document.getElementById('section').innerText = data.student.section;
+            document.getElementById('grade').innerText = data.student.section.grade;
+            document.getElementById('section').innerText = data.student.section.section;
             
         }
         function generateStudents(sessionStudents = {}){

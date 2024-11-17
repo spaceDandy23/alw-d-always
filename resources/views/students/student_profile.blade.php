@@ -13,8 +13,7 @@
                     <div class="student-info mb-3">
                         <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#messageParentModal">Message Guardians</button>
                         <p><strong>Student ID:</strong> {{ $student->id }}</p>
-                        <p><strong>Grade:</strong> {{ $student->grade }}</p>
-                        <p><strong>Section:</strong> {{ $student->section }}</p>
+                        <p><strong>Section:</strong> {{ $student->section->grade }}-{{ $student->section->section }}</p>
                         <p><strong>RFID Tag:</strong> {{ $student->tag->rfid_tag ?? 'No RFID tag' }}</p>
                         <p><strong>School Year:</strong> {{ $student->schoolYear->year }}</p>
                     </div>

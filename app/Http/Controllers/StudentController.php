@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\Guardian;
 use App\Models\SchoolYear;
+use App\Models\Section;
 use App\Models\Student;
 use App\Models\Tag;
 
@@ -21,11 +22,10 @@ class StudentController extends Controller
 
         if($request->isMethod('post')){
             $request->validate([
-                'rfid_tag' => 'required|numeric',  
-                'first_name' => 'required|string|max:255', 
-                'last_name' => 'required|string|max:255', 
-                'grade' => 'required|integer|min:7|max:10',
-                'section' => 'required|integer|min:1|max:3',
+                'rfid_tag' => 'required',  
+                'first_name' => 'required', 
+                'last_name' => 'required', 
+                'section' => 'required',
 
             ]);
             $student = Student::findOrFail($request->student_id);
@@ -73,18 +73,25 @@ class StudentController extends Controller
         $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
         $setOfNames = explode(' ', $sanitizedName);
         $schoolYear = SchoolYear::where('is_active', true)->first()->id ?? '';
-        return Student::query()
-        ->when($setOfNames, function($q, $setOfNames){
+        return Student::
+        when($setOfNames, function($q, $setOfNames){
             foreach($setOfNames as $name){
                 $name = trim($name);
                 $q->where('name', 'LIKE', "%{$name}%");
             }
         })
-        ->when($grade, function($q, $grade){
-            return $q->where('grade', $grade);
+        ->when($section, function($q, $section) {
+
+            return $q->whereHas('section', function($query) use ($section){
+                $query->where('section', $section);
+            });
+
         })
-        ->when($section, function($q, $section){
-            return $q->where('section', $section);
+        ->when($grade, function($q, $grade) {
+            return $q->whereHas('section', function($query) use ($grade){
+                $query->where('grade', $grade);
+            });
+
         })
         ->where('school_year_id',  $schoolYear);
 
@@ -103,12 +110,15 @@ class StudentController extends Controller
 
 
         
-            $studentQuery = $this->searchQuery($name, $grade, $section)->where('tag_id', '=', NULL)->paginate(5);
+            $studentQuery = $this->searchQuery($name, $grade, $section)->where('tag_id', '=', NULL)
+            ->with('section')
+            ->paginate(10);
+           
 
 
             return response()->json([
                 'success' => true,
-                'results' => $studentQuery,
+                'results' => $studentQuery
             ]);
         }
 
@@ -172,16 +182,36 @@ class StudentController extends Controller
 
 
         $header = fgetcsv($csvFile);
+        $expectedHeader = ['last name', 'first name', 'middle name', 'grade', 'section','guardian name', 'relationship to student', 'phone number'];
+
+
+
+        for ($i = 0; $i < count($expectedHeader); $i++){
+            if($header[$i] != $expectedHeader[$i]){
+
+                return back()->with('error', 'Header does not match expected header');
+            }
+        }
     
         DB::transaction(function() use ($csvFile, $header, $schoolYearRecord) {
             while (($row = fgetcsv($csvFile)) !== false) {
                 $data = array_combine($header, $row);
+
+
+
+                $section = Section::firstOrCreate([
+                    'grade' => $data['grade'],
+                    'section' => $data['section']
+                    ]
+                );
+
+
                 $student = Student::firstOrCreate(
                     [
                         'name' => "{$data['last name']}, {$data['first name']} {$data['middle name']}",
-                        'grade' => $data['grade'],
-                        'section' => $data['section'],
                         'school_year_id' => $schoolYearRecord->id,
+                        'section_id' => $section->id
+
                     ],
                     [
                         'created_at' => now(),
@@ -303,7 +333,7 @@ class StudentController extends Controller
     {
         $students = Student::with('guardians')->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '')
         ->paginate(11);
-
+        $sections = Section::all();
         $relationships = [
             'Mother',
             'Father',
@@ -313,7 +343,7 @@ class StudentController extends Controller
             'Sibling',
             'Other'
         ];
-        return view('students.students_list', compact('students',  'relationships'));
+        return view('students.students_list', compact('students',  'relationships', 'sections'));
 
     }
 
@@ -389,8 +419,7 @@ class StudentController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'grade' => 'required|integer',
-            'section' => 'required|integer',
+            'section_id' => 'required|integer',
         ]);
 
 
@@ -401,10 +430,13 @@ class StudentController extends Controller
                 'tag_id' => $tag->id
             ]);
         }
+
+
+
+
         $student->update([
             'name' => $request->name,
-            'grade' => $request->grade,
-            'section' => $request->section,
+            'section_id' => Section::find($request->section_id)->id
         ]);
 
 

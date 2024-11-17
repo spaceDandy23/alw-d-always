@@ -45,7 +45,7 @@
                     <tr>
                         <td>{{ $notif->guardian->name }}</td>
                         <td>{{ $notif->message}}</td>
-                        <td>{{ $notif->created_at->format('Y-m-h') }}</td>
+                        <td>{{ $notif->date }}</td>
                     </tr>
                 @endforeach
             </tbody>

@@ -50,7 +50,6 @@
                     </tr>
                     <tr>
                         <th>Name</th>
-                        <th>Grade</th>
                         <th>Section</th>
                         <th>Total Number Of Days Absent</th>
                         <th>Total Number Of Days Present</th>
@@ -62,8 +61,7 @@
                     @foreach($attendances as $attendance)
                     <tr>
                         <td>{{ $attendance->student->name }}</td>
-                        <td>{{ $attendance->student->grade }}</td>
-                        <td>{{ $attendance->student->section }}</td>
+                        <td>{{ $attendance->student->section->grade }}-{{ $attendance->student->section->section }}</td>
                         <td>{{ $attendance->total_absent }}</td>
                         <td>{{ $attendance->total_present }}</td>
                         <td>{{ $attendance->student->SchoolYear->year }}</td>

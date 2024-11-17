@@ -6,10 +6,12 @@
 <div class="row justify-content-center">
     <div class="col">
         <div class="p-4">
-            @include('partials.alerts')
             <form action="{{ route('attendances.reports.filter') }}" method="GET" class="mb-4">
                 <input type="hidden" value="from_cancel_excuse" name="from_cancel_excuse">
                 @include('partials.search_with_date')
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="submit">Filter</button>
+                </div>
             </form>
             <form action="{{ route('excuse.cancel.apply') }}" method="POST">
                 @csrf
@@ -19,7 +21,6 @@
                         <tr>
                             <th scope="col">Date</th>
                             <th scope="col">Name</th>
-                            <th scope="col">Grade</th>
                             <th scope="col">Section</th>
                             <th scope="col">Status Morning</th>
                             <th scope="col">Status Lunch</th>
@@ -30,8 +31,7 @@
                             <tr>
                                 <td>{{ $attendance->date }}</td>
                                 <td>{{ $attendance->student->name }}</td>
-                                <td>{{ $attendance->student->grade }}</td>
-                                <td>{{ $attendance->student->section }}</td>
+                                <td>{{ $attendance->student->section->grade }}-{{ $attendance->student->section->section }}</td>
                                 <td>
                                     <label>
                                         <input type="hidden" name="attendance[{{ $attendance->id }}][status_morning]" value="">
@@ -63,5 +63,10 @@
         </div>
     </div>
 </div>
+<script>
 
+    console.log(@json($attendances));
+
+
+</script>
 @endsection

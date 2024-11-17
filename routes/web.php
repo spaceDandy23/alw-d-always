@@ -7,7 +7,6 @@ use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RfidController;
-use App\Http\Controllers\SpecialOccasionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
@@ -81,8 +80,8 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('class', [TeacherController::class, 'classIndex'])->name('class.index');
         Route::put('class/{student}', [TeacherController::class,'updateClassAttendance'])->name('class.attendance.update');
         Route::post('class/store', [TeacherController::class, 'storeClass'])->name('create.class');
-        Route::post('class/unenroll/students', [TeacherController::class, 'unenrollStudent'])->name('unenroll.student');
-        Route::post('class/delete', [TeacherController::class, 'removeClass'])->name('class.delete');
+        Route::post('class/unenroll/students', [TeacherController::class, 'unenrollStudent'])->name('unenroll.students');
+        Route::post('class/remove', [TeacherController::class, 'removeClass'])->name('class.delete');
         Route::post('class/add', [TeacherController::class, 'addStudent'])->name('class.add.student');
     });
 });

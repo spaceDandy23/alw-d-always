@@ -220,8 +220,8 @@
                     <div class="col-md-4 mb-4">
                         <div class="card shadow-sm border-primary">
                             <div class="card-body">
-                                <h6 class="card-title text-primary">{{ $sectionData->grade }} - {{ $sectionData->section }}</h6>
-                                <p class="card-text"><strong>Total Attendance:</strong> {{ $sectionData->section_overall * 100 }}%</p>
+                                <h6 class="card-title text-primary">{{ $sectionData->section_name}}</h6>
+                                <p class="card-text"><strong>Total Attendance:</strong> {{ round($sectionData->section_overall * 100,2) }}%</p>
                             </div>
                         </div>
                     </div>
@@ -296,7 +296,7 @@
 
             const ctx = document.getElementById('monthly_attendance_chart_per_section').getContext('2d');
             let labels = sectionData.map(function(data) {
-                return `${data.grade} - ${data.section}`;
+                return `${data.section_name}`;
 
             });
             let totalPresents = sectionData.map(function(data){
@@ -327,46 +327,42 @@
             });
 
         }
-
-
-
         function attendanceTrend(attendanceTrend) {
-            console.log(attendanceTrend);
+            console.log("Raw attendance trend data:", attendanceTrend);
+
             let cleanedAttendanceData = {};
-            let cleanedDate = {};
-
-            const ctx = document.getElementById('attendance_trends_over_time').getContext('2d');
-
+            let cleanedDateSet = new Set();
             attendanceTrend.forEach((data) => {
-                cleanedDate[`${data.year}/${data.month < 10 ? '0' + data.month : data.month}`] = `${data.year}/${data.month < 10 ? '0' + data.month : data.month}`;
+                const monthYear = `${data.year}/${data.month.toString().padStart(2, '0')}`;
+                cleanedDateSet.add(monthYear);
             });
 
-            const cleanedArrayDate = Object.entries(cleanedDate).map((data) => data[1]);
-            console.log(cleanedArrayDate);
-
+            const cleanedArrayDate = Array.from(cleanedDateSet).sort(); 
+            console.log("Unique sorted dates:", cleanedArrayDate);
             attendanceTrend.forEach((data) => {
-                const key = `${data.grade}-${data.section}`;
+                const key = data.section_name;
                 if (!cleanedAttendanceData[key]) {
-                    cleanedAttendanceData[key] = new Array(cleanedArrayDate.length).fill(null); 
+                    cleanedAttendanceData[key] = new Array(cleanedArrayDate.length).fill(null);
                 }
-                
-                const index = cleanedArrayDate.findIndex(date => date === `${data.year}/${data.month < 10 ? '0' + data.month : data.month}`);
+
+                const monthYear = `${data.year}/${data.month.toString().padStart(2, '0')}`;
+                const index = cleanedArrayDate.indexOf(monthYear);
                 if (index !== -1) {
-                    cleanedAttendanceData[key][index] = data.total_present; 
+                    cleanedAttendanceData[key][index] = parseFloat(data.total_present);
                 }
             });
 
-            console.log(cleanedAttendanceData);
+            console.log("Cleaned attendance data:", cleanedAttendanceData);
+            const dataSets = Object.entries(cleanedAttendanceData).map(([key, data]) => ({
+                label: key,
+                data: data,
+                borderColor: getRandomColor(),
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                fill: true,
+            }));
 
-
-            const dataSets = Object.entries(cleanedAttendanceData).map(([key, data]) => {
-                return {
-                    label: key,
-                    data: data
-                };
-            });
-
-            console.log(dataSets.length);
+            console.log("Datasets for Chart.js:", dataSets);
+            const ctx = document.getElementById('attendance_trends_over_time').getContext('2d');
             const attendanceChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -378,6 +374,7 @@
                     plugins: {
                         legend: {
                             display: true,
+                            position: 'top',
                         },
                         tooltip: {
                             mode: 'index',
@@ -394,7 +391,7 @@
                         y: {
                             title: {
                                 display: true,
-                                text: 'Attendance',
+                                text: 'Total Attendance',
                             },
                             beginAtZero: true,
                         },
@@ -402,6 +399,14 @@
                 },
             });
         }
+        function getRandomColor() {
+            const random = () => Math.floor(Math.random() * 255);
+            return `rgba(${random()}, ${random()}, ${random()}, 1)`;
+        }
+
+
+
+
 
     });
 

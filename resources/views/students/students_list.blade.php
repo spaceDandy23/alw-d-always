@@ -7,7 +7,6 @@
 <div class="row justify-content-center">
     <div class="col">
         <div class="d-flex justify-content-center mb-2">
-            <!-- <a href="#" class="btn btn-primary mx-4" data-bs-toggle="modal" data-bs-target="#createStudent">Add Student</a> -->
             <a href="#" class="btn btn-secondary mx-4" data-bs-toggle="modal" data-bs-target="#uploadCSV">Upload CSV</a>
         </div>
 
@@ -55,7 +54,6 @@
                 <tr>
                     <th scope="col">RFID Tag</th>
                     <th scope="col">Name</th>
-                    <th scope="col">Grade</th>
                     <th scope="col">Section</th>
                     <th scope="col">School Year</th>
                     <th scope="col">Associated Guardian</th>
@@ -67,8 +65,7 @@
                     <tr>
                         <td>{{ $student->tag->rfid_tag ?? 'None' }}</td>
                         <td>{{ $student->name }}</td>
-                        <td>{{ $student->grade }}</td>
-                        <td>{{ $student->section }}</td>
+                        <td>{{ $student->section->grade }}-{{ $student->section->section }}</td>
                         <td>{{ $student->schoolYear->year ?? 'No School Year' }}</td>
                         <td> @foreach ($student->guardians as $guardian )
                             <li>
@@ -139,19 +136,14 @@
                                             <label for="name_{{ $student->id }}" class="form-label">Name</label>
                                             <input type="text" class="form-control" id="name_{{ $student->id }}" name="name" value="{{ $student->name }}">
 
-                                            <label for="grade_{{ $student->id }}" class="form-label">Grade</label>
-                                            <select class="form-select" id="grade_{{ $student->id }}" name="grade">
-                                                @for($i = 7; $i <= 12; $i++)
-                                                    <option value="{{ $i }}" {{ $student->grade == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                                @endfor
-                                            </select>
 
                                             <label for="section_{{ $student->id }}" class="form-label">Section</label>
-                                            <select class="form-select" id="section_{{ $student->id }}" name="section">
-                                                @for($i = 1; $i <= 3; $i++)
-                                                    <option value="{{ $i }}" {{ $student->section == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                                @endfor
+                                            <select class="form-select" id="section_{{ $student->id }}" name="section_id">
+                                                @foreach($sections as $section)
+                                                    <option value="{{ $section->id }}" {{ $student->section_id === $section->id ? 'selected' : '' }}>{{ $section->grade }}-{{ $section->section }}</option>
+                                                @endforeach
                                             </select>
+
 
                                             <label for="school_year_{{ $student->id }}" class="form-label">School Year</label>
                                             <input type="text" name="school_year" class="form-control" id="school_year" value="{{ $student->schoolYear->year ?? 'No School Year' }}"readonly>
@@ -196,71 +188,6 @@
         </div>
     </div>
 </div>
-<!-- Create Student Modal -->
-<!-- <div class="modal fade" id="createStudent" tabindex="-1" aria-labelledby="createStudentLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createStudentLabel">Add New Student</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('students.store') }}" method="post">
-                    @csrf
-                    <label for="last_name" class="form-label">Last Name</label>
-                    <input type="text" class="form-control" id="last_name" name="last_name">
-
-                    <label for="first_name" class="form-label">First Name</label>
-                    <input type="text" class="form-control" id="first_name" name="first_name">
-
-
-                    <label for="middle_name" class="form-label">Middle Name</label>
-                    <input type="text" class="form-control" id="middle_name" name="middle_name">
-
-
-                    <label for="grade" class="form-label">Grade</label>
-                    <select class="form-select" id="grade" name="grade">
-                        <option value="">-- Select Grade --</option>
-                        @for($i = 7; $i <= 12; $i++)
-                            <option value="{{ $i }}">{{ $i }}</option>
-                        @endfor
-                    </select>
-                    <label for="section" class="form-label">Section</label>
-                    <select class="form-select" id="section" name="section">
-                        <option value="">-- Select Section --</option>
-                        @for($i = 1; $i <= 3; $i++)
-                            <option value="{{ $i }}">{{ $i }}</option>
-                        @endfor
-                    </select>
-
-
-                    <label for="guardian_last_name" class="form-label">Guardian Last Name</label>
-                    <input type="text" class="form-control" id="guardian_last_name" name="guardian_last_name">
-
-                    <label for="guardian_first_name" class="form-label">Guardian First Name</label>
-                    <input type="text" class="form-control" id="guardian_first_name" name="guardian_first_name">
-
-                    <label for="relationship" class="form-label">Relationship</label>
-                    <select id="relationship" class="form-select" name="relationship">
-                        <option value="">-- Select Relationship --</option>
-                        @foreach ($relationships as $relationship )
-                            <option value="{{$relationship}}">{{$relationship}}</option>
-                        @endforeach
-                    </select>
-                    <label for="phone_number" class="form-label">Phone Number</label>
-                    <input type="text" class="form-control" id="phone_number" name="phone_number">
-
-
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Student</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div> -->
 <!-- Upload CSV Modal -->
 <div class="modal fade" id="uploadCSV" tabindex="-1" aria-labelledby="uploadCSVLabel" aria-hidden="true">
     <div class="modal-dialog">

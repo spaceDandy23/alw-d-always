@@ -10,23 +10,16 @@ class Student extends Model
     use HasFactory;
 
 
-    protected $fillable = ['name', 'grade', 'section','school_year_id', 'guardian_id', 'tag_id'];
+    protected $fillable = ['name', 'grade', 'section','school_year_id', 'guardian_id', 'tag_id','section_id'];
 
     public function guardians(){
 
         return $this->belongsToMany(Guardian::class, 'guardian_student')->withPivot('relationship_to_student');
     }
-    public function teachers(){
-
-        return $this->belongsToMany(User::class, 'student_teacher', 'student_id', 'teacher_id')->withPivot('enrolled');
-
+    public function sectionAttendances()
+    {
+        return $this->hasMany(AttendanceSectionTeacher::class);
     }
-    public function attendanceTeachers(){
-
-        return $this->belongsToMany(User::class, 'attendance_student_teacher', 'student_id', 'teacher_id')->withPivot('present', 'date','time', 'id');
-
-    }
-
     public function rfidLogs(){
         return $this->hasMany(RfidLog::class);
     }
@@ -44,7 +37,17 @@ class Student extends Model
     public function schoolYear(){
         return $this->belongsTo(SchoolYear::class);
     }
+    public function section(){
+
+        return $this->belongsTo(Section::class);
+
+    }
     public function tagHistories(){
         return $this->hasMany(TagHistory::class);
+    }
+
+    public function teachers(){
+
+        return $this->belongsToMany(User::class,'student_teacher','student_id', 'teacher_id');
     }
 }

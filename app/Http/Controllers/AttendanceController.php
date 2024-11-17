@@ -25,58 +25,77 @@ class AttendanceController extends Controller
         $setOfNames = explode(' ', $sanitizedName);
 
 
-        $attendances = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
+        $attendances = Attendance::
+        when($fromExcuse, function($q) {
+            $q->where(function ($query) {
+                $query->whereIn('status_morning', ['excused', 'absent'])
+                      ->orWhereIn('status_lunch', ['excused', 'absent']);
+            });
+        })
         ->when($setOfNames, function($q, $setOfNames){
-            foreach($setOfNames as $name){
+            foreach ($setOfNames as $name) {
                 $name = trim($name);
-                $q->where('students.name', 'LIKE', "%{$name}%");
+                $q->whereHas('student', function ($query) use ($name) {
+                    $query->where('name', 'LIKE', "%{$name}%");
+                });
             }
 
         })
-        ->when($grade, function($q, $grade){
-            return $q->where('students.grade', $grade);
+        ->when($section, function($q, $section) {
+            return $q->whereHas('student', function ($query) use ($section) {
+                $query->whereHas('section', function($query) use ($section){
+                    $query->where('section', $section);
+                });
+            });
         })
-        ->when($section, function($q, $section){
-            return $q->where('students.section', $section);
+        ->when($grade, function($q, $grade) {
+            return $q->whereHas('student', function ($query) use ($grade) {
+                $query->whereHas('section', function($query) use ($grade){
+                    $query->where('grade', $grade);
+                });
+            });
         })
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
-        })
-        ->when($fromExcuse,function($q) {
-            $q->whereIn('attendances.status_morning', ['excused', 'absent'])
-              ->orWhereIn('attendances.status_lunch', ['excused', 'absent']);
         });
 
 
 
 
+
         if(Auth::user()->isAdmin()){
-            $attendances->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
+            $attendances->whereHas('student', function($q){
+                return $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
+            });
 
         }
         elseif(Auth::user()->isTeacher()){
-            $attendances->where('students.school_year_id', SchoolYear::latest()->first()->id ?? '');
+            $attendances->whereHas('student', function($q){
+                return $q->where('school_year_id', SchoolYear::latest()->first()->id ?? '');
+            });
 
         }
 
         
         if(!$fromExcuse){
-        $attendances->selectRaw('
-        students.id as student_id,
-        students.name as student_name,
-        SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) +
-        SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END) as total_present,
-        SUM(CASE WHEN status_morning = "absent" THEN 0.5 ELSE 0 END) +
-        SUM(CASE WHEN status_lunch = "absent" THEN 0.5 ELSE 0 END) as total_absent,
-        COUNT(attendances.id) as total_attendance_records,
-        (SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) + 
-         SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END)) / 
-         COUNT(attendances.id) as average_days_present
+        $attendances->join('students', 'attendances.student_id', '=', 'students.id')
+        ->selectRaw('
+            students.id as student_id,
+            students.name as student_name,
+            SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) +
+            SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END) as total_present,
+            SUM(CASE WHEN status_morning = "absent" THEN 0.5 ELSE 0 END) +
+            SUM(CASE WHEN status_lunch = "absent" THEN 0.5 ELSE 0 END) as total_absent,
+            COUNT(attendances.id) as total_attendance_records,
+            (SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) + 
+                SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END)) / 
+                COUNT(attendances.id) as average_days_present
         ')
         ->groupBy('students.id', 'students.name');
 
         }
-    
+
+
         return $attendances; 
     }
     public function search(Request $request){
@@ -97,15 +116,8 @@ class AttendanceController extends Controller
         if($fromExcuse){
 
             $attendances = $this->getStudentsAttendance($name, $grade, $section, $startDate, $endDate, $fromExcuse)
-            ->select(
-    'attendances.id as id',
-             'students.id as student_id', 
-             'students.name as name',
-             'students.grade as grade',
-             'attendances.status_morning as status_morning',
-             'attendances.status_lunch as status_lunch',
-             'attendances.date as date')
-            ->paginate(20)
+            ->with('student')
+            ->paginate(30)
             ->appends($request->all());
             return view('attendances.cancel_excuse_students', compact('attendances'));
 
@@ -113,7 +125,7 @@ class AttendanceController extends Controller
         }
         $fatherlessChild = $this->getStudentsAttendance($name, $grade, $section,$startDate, $endDate);
         $getOverallAttendance = $fatherlessChild->get();
-        $attendances = $fatherlessChild->paginate(10)->appends($request->all());
+        $attendances = $fatherlessChild->paginate(30)->appends($request->all());
         $totalStudents = $attendances->total();
 
 
@@ -152,8 +164,12 @@ class AttendanceController extends Controller
     }
 
 
-    public function attendances(){
+    public function attendances(Request $request){
 
+
+        if ($request->has('attendance')) {
+            session()->put('attendance_status', $request->attendance);
+        }
         $attendances = Attendance::latest()
         ->whereIn('status_morning', ['excused', 'absent'])
         ->orWhereIn('status_lunch', ['excused', 'absent'])
@@ -161,7 +177,7 @@ class AttendanceController extends Controller
             return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
 
         })
-        ->paginate(40);
+        ->paginate(30);
 
         return view('attendances.cancel_excuse_students', compact('attendances'));
 

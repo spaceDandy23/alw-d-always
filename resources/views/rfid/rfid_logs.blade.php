@@ -26,7 +26,6 @@
             <thead>
                 <tr>
                     <th scope="col">Student Name</th>
-                    <th scope="col">Grade</th>
                     <th scope="col">Section</th>
                     <th scope="col">Checked in at</th>
                     <th scope="col">Checked out at</th>
@@ -39,8 +38,7 @@
                 @foreach($rfidLogs as $log)
                     <tr>
                         <td>{{ $log->student->name }}</td>
-                        <td>{{ $log->student->grade }}</td>
-                        <td>{{ $log->student->section }}</td>
+                        <td>{{ $log->student->section->grade }}-{{ $log->student->section->section }}</td>
                         <td>{{ $log->check_in }}</td>
                         <td>{{ $log->check_out }}</td>
                         <td>{{ $log->student->SchoolYear->year }}</td>

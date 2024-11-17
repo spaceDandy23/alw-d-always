@@ -9,8 +9,7 @@ export function renderSearchedStudents(students){
                 studentData += `
                                 <tr data-key="${key}" class="student">
                                 <td>${values.name}</td>
-                                <td>${values.grade}</td>
-                                <td>${values.section}</td>
+                                <td>${values.section.grade}-${values.section.section}</td>
                                 </tr>`;
             });
     document.getElementById('students_searched').innerHTML = studentData;

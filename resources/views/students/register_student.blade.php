@@ -62,8 +62,6 @@
                 <input type="text" name="first_name" id="first_name" class="form-control" readonly>
                 <label for="last_name" class="form-label">Last Name</label>
                 <input type="text" name="last_name" id="last_name" class="form-control" readonly>
-                <label for="grade" class="form-label">Grade</label>
-                <input type="text" name="grade" id="grade" class="form-control" readonly>
                 <label for="section" class="form-label">Section</label>
                 <input type="text" name="section" id="section" class="form-control mb-2" readonly>
                 <!-- <label for="guardian_first_name" class="form-label">Guardian's First Name</label>
@@ -84,7 +82,6 @@
                 <thead>
                     <th scope="col">Name</th>
                     <th scope="col">Grade</th>
-                    <th scope="col">Section</th>
                 </thead>
                 <tbody id="students_searched">
 

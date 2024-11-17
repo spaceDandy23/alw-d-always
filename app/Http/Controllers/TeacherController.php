@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
+use App\Models\AttendanceSectionTeacher;
 use App\Models\SchoolYear;
+use App\Models\Section;
 use App\Models\Student;
+use App\Models\User;
 use Auth;
 use Carbon\Carbon;
 use DB;
@@ -53,7 +56,9 @@ class TeacherController extends Controller
 
 
         $attendanceTrend = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
-        ->select('students.grade', 'students.section', DB::raw('
+        ->join('sections', 'students.section_id', '=', 'sections.id')
+        ->select(DB::raw('
+            CONCAT(sections.grade, " - ", sections.section) as section_name, 
             YEAR(date) as year, 
             MONTH(date) as month,
             SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) + SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END)
@@ -91,82 +96,27 @@ class TeacherController extends Controller
     }
     public function classIndex(){
 
-
-        $studentsGroupedBySection = Auth::user()->students->groupBy(function ($student) {
-            return $student->grade . '-' . $student->section;
-        })
-        ->map(function($students){
-
-            return $students->each(function ($student){
-
-
-                $attendanceCount = $student->attendances->count();
-                $presentCount = $student->attendances()
-                ->selectRaw('SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) 
-                            + SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END) as present_count')
-                ->value('present_count');
-
-                $absentCount = $student->attendances()
-                ->selectRaw('SUM(CASE WHEN status_morning = "absent" THEN 0.5 ELSE 0 END) 
-                            + SUM(CASE WHEN status_lunch = "absent" THEN 0.5 ELSE 0 END) as absent_count')
-                ->value('absent_count');
-
-
-
-                $averagePresent = $attendanceCount > 0 ? round(($presentCount / $attendanceCount), 3) * 100 : 0;
-
-
-                $averageAbsent = $attendanceCount > 0 ? round(($absentCount / $attendanceCount), 3) * 100 : 0;
-
-                $student->recent_attendance = $student->attendances()
-                ->where('date', now()->format('Y-m-d'))
-                ->first();
-                $student->recent_logs = $student->rfidLogs()
-                ->where('date', now()->format('Y-m-d'))
-                ->get();
-
-                $student->average_present = $averagePresent;
-                $student->average_absent = $averageAbsent;
-
-
-                
-            });
-
-
+        $studentsAuth = Auth::user()->students()->get();
+        $groupedBySection = $studentsAuth->groupBy(function($student) {
+            return "{$student->section->grade}-{$student->section->section}"; 
         });
+        $sections = Section::all();
 
-
-        return view('teachers.student_teacher_list', compact('studentsGroupedBySection'));
+        return view('teachers.section_teacher_list', compact('sections', 'groupedBySection'));
     }
     
     public function storeClass(Request $request){
         $sections = $request->input('sections', []);
 
+
         if(!$sections){
             return back()->with('error', 'Please fill out at least one checkbox');
         }
 
-        foreach($sections as $section){
+        $student = Student::whereIn('section_id', $sections)->get()->pluck('id');
 
-            $students = Student::where('grade', $section[0])
-            ->where('section', $section[2])
-            ->where('school_year_id', SchoolYear::latest()->first()->id ?? '')
-            ->pluck('id');
-            if ($students->isNotEmpty()) {
-                foreach ($students as $id) {
-                    if (!Auth::user()->students()->where('student_id', $id)->exists()) {
-                        Auth::user()->students()->attach($id, [
-                            'created_at' => now(), 
-                            'updated_at' => now()
-                        ]);
-                    }
-                }
 
-            }
-
-        }
-        
-        
+        Auth::user()->students()->syncWithoutDetaching($student);   
         return redirect()->route('class.index')->with('success','Section added successfully');
 
 
@@ -174,14 +124,14 @@ class TeacherController extends Controller
 
     public function removeClass(Request $request){
 
-        $user = Auth::user();
-        $studentIds = $user->students()
-        ->where('grade', $request->section[0])
-        ->where('section', $request->section[2])
+        $studentIds = Student::whereHas('section', function($q) use($request){
+            return $q->where('grade', $request->section_id[0])
+                    ->where('section', $request->section_id[2]);
+        })
+        ->get()
         ->pluck('id');
 
-        $user->students()->detach($studentIds);
-
+        Auth::user()->students()->detach($studentIds);
 
         return redirect()->route('class.index')->with('success', 'Watchlist deleted');
 
@@ -190,19 +140,29 @@ class TeacherController extends Controller
     public function unenrollStudent(Request $request){
 
 
+
         if(!$request->students){
             return redirect()->route('class.index')->with('error', 'Fill in at least one checkbox');
 
         }
         
-        Auth::user()
-        ->students()
-        ->whereIn('student_id',array_keys($request->students))
-        ->each(function($student) use($request){
 
-            $student->pivot->enrolled = (bool) $request->students[$student->id];
-            $student->pivot->save();
-        });
+
+        foreach ($request->students as $id => $toCheck) {
+            $authStudent = Auth::user()->students()
+            ->where('student_id', $id);
+
+
+            if(count($toCheck) > 1){
+                $authStudent->updateExistingPivot($id, ['enrolled' => false]);
+            }
+            else{
+
+                $authStudent->updateExistingPivot($id, ['enrolled' => true]);
+
+            }
+            
+        }
 
         return redirect()->route('class.index')->with('success', 'Class updated');
     }
@@ -210,43 +170,45 @@ class TeacherController extends Controller
     public function markAttendance(){
 
 
+        $sectionId = Session::get('section_id');
 
         $studentIds = Auth::user()
-        ->attendanceStudents()
+        ->sectionAttendances()
         ->where('date', now()->format('Y-m-d'))
+        ->where('section_id', $sectionId)
         ->where('present', true)
-        ->get()
-        ->pluck('id') ?? [];
+        ->pluck('student_id');
 
 
-        $section = Session::get('section');
+
         
-        $absentStudentIds = Auth::user()
-        ->students()
+        $absentStudentIds = Auth::user()->students()
+        ->whereNotIn('student_id', $studentIds)
         ->where('enrolled', true)
-        ->where('grade', $section[0])
-        ->where('section', $section[2])
-        ->whereNotIn('id',$studentIds)
-        ->get()
-        ->pluck('id');
-        
+        ->where('section_id', $sectionId)
+        ->pluck('student_id');
 
 
-        foreach($absentStudentIds as $id){
-            if(!Auth::user()->attendanceStudents()
-            ->where('student_id', $id)
-            ->where('date', now()->format('Y-m-d'))->first()){
-                Auth::user()->attendanceStudents()->attach($id, [
-                    'created_at' => now(),
-                    'updated_at'=> now(),
-                    'date' => now()->format('Y-m-d'),
-                    'time' => now()->format('H:i:s'),
-                    'present' => false,
-                    'student_id' => $id,
-                    'teacher_id' => Auth::id()
-                ]);
-            }
+        foreach ($absentStudentIds as $id){
+
+
+            AttendanceSectionTeacher::firstOrCreate([
+                'student_id' => $id,
+                'teacher_id' => Auth::id(),
+                'section_id' => $sectionId,
+                'date' => today(),
+                ],
+                [
+                    
+                'time' => now()->format('H:i:s'),
+                'present' => false
+                
+                ]
+            );
         }
+
+
+
         return redirect()->back()->with('success', 'Attendance Marked');
         
     }
