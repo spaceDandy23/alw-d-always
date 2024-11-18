@@ -17,7 +17,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'prevent.back' => NoCache::class,
-            'prevent_back_history' => PreventBackHistory::class,
             'teacher' => TeacherMiddleware::class,
             'admin' => AdminMiddleware::class,
         ]);

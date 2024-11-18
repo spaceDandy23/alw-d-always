@@ -63,7 +63,7 @@ Route::middleware('prevent.back')->group(function () {
         Route::post('cancel', [AttendanceController::class, 'cancelClassSession'])->name('cancel.class.session');
     });
     Route::match(['post', 'get'], 'verify', [RfidController::class, 'verify'])->name('verify');
-    Route::match(['post', 'get'], 'login', [AuthController::class, 'login'])->name('login');
+    Route::match(['post', 'get'], 'login', [AuthController::class, 'login'])->name('login')->middleware('guest');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::middleware(['teacher'])->group(function (){
