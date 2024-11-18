@@ -229,16 +229,18 @@ class RfidController extends Controller
             
         }
 
+        if($request->section){
+            $sectionId = Section::where('grade',$request->section[0])
+            ->where('section', $request->section[2])
+            ->first()
+            ->id;
+            
+            Session::put('section_id', $sectionId);
+            return view('rfid.rfid_scan', compact('sectionId'));
 
-        $sectionId = Section::where('grade',$request->section[0])
-        ->where('section', $request->section[2])
-        ->first()
-        ->id;
+        }
 
-        
-        Session::put('section_id', $sectionId);
-        return view('rfid.rfid_scan', compact('sectionId'));
-
+        return view('rfid.rfid_scan');
 
     }
     public function message($studentID, $message){

@@ -10,8 +10,11 @@ class Student extends Model
     use HasFactory;
 
 
-    protected $fillable = ['name', 'grade', 'section','school_year_id', 'guardian_id', 'tag_id','section_id'];
-
+    protected $fillable = ['name', 'grade', 'section','school_year_id', 'guardian_id', 'tag_id','section_id', 'import_batch_id'];
+    public function importBatch()
+    {
+        return $this->belongsTo(ImportBatch::class);
+    }
     public function guardians(){
 
         return $this->belongsToMany(Guardian::class, 'guardian_student')->withPivot('relationship_to_student');

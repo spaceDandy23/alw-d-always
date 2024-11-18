@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('page_title', 'Class Report')
+@section('page_title', 'Class Attendance Report')
 
 @section('content')
 <div class="row justify-content-center">
@@ -17,7 +17,9 @@
                         <select class="form-select" name="status" id="status">
                             <option value="">-- Select Status --</option>
                             @for($i = 0; $i <= 1; $i++)
-                                <option value="{{ $i }}">{{ $i === 1 ? ucfirst('present') : ucfirst('absent') }}</option>
+                                <option value="{{ $i }}">
+                                    {{ $i === 1 ? ucfirst('present') : ucfirst('absent') }}
+                                </option>
                             @endfor
                         </select>
                     </div>
@@ -40,69 +42,76 @@
             </form>
         </div>
 
+        <!-- Attendance Table -->
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="thead-dark">
+            <table class="table table-striped">
+                <thead>
                     <tr>
-                        <th>Name</th>
+                        <th>Student Name</th>
                         <th>Grade</th>
                         <th>Section</th>
                         <th>Date</th>
-                        <th>Present</th>
                         <th>Time</th>
-                        <th>Action</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($classAttendances as $student)
-                    <tr>
-                        <td>{{ $student->name }}</td>
-                        <td>{{ $student->grade }}</td>
-                        <td>{{ $student->section }}</td>
-                        <td>{{ $student->pivot->date }}</td>
-                        <td>{{ $student->pivot->present }}</td>
-                        <td>{{ $student->pivot->time }}</td>
-                        <td>
-                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal-{{ $student->pivot->id }}">
-                            Edit
-                        </button>
-                        </td>
-                    </tr>
-                    <div class="modal fade" id="editModal-{{ $student->pivot->id }}" tabindex="-1" aria-labelledby="editModalLabel-{{ $student->pivot->id }}" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="editModalLabel-{{ $student->pivot->id }}">Edit Attendance</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <form action="{{ route('class.attendance.update', $student->pivot->id) }}" method="POST">
+                    @forelse ($attendanceSection as $attendance)
+                        <tr>
+                            <td>{{ $attendance->student->name }}</td>
+                            <td>{{ $attendance->section->grade }}</td>
+                            <td>{{ $attendance->section->section }}</td>
+                            <td>{{ $attendance->date }}</td>
+                            <td>{{ $attendance->time }}</td>
+                            <td>{{ $attendance->present ? 'Present' : 'Absent' }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal-{{ $attendance->id }}">
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="editModal-{{ $attendance->id }}" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <form action="{{ route('class.attendance.update', $attendance->id) }}" method="POST">
                                     @csrf
                                     @method('PUT')
-                                    <div class="modal-body">
-                                        <div class="mb-3">
-                                            <label for="present-{{ $student->pivot->id }}" class="form-label">Present</label>
-                                            <select name="present" id="present-{{ $student->pivot->id }}" class="form-select">
-                                                <option value="1" {{ $student->pivot->present == 1 ? 'selected' : '' }}>Present</option>
-                                                <option value="0" {{ $student->pivot->present == 0 ? 'selected' : '' }}>Absent</option>
-                                            </select>
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editModalLabel">Edit Attendance</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="status-{{ $attendance->id }}" class="form-label">Status</label>
+                                                <select name="present" id="status_{{ $attendance->id }}" class="form-select">
+                                                    <option value="1" {{ $attendance->present ? 'selected' : '' }}>Present</option>
+                                                    <option value="0" {{ !$attendance->present ? 'selected' : '' }}>Absent</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
                                     </div>
                                 </form>
                             </div>
                         </div>
-                    </div>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center">No records found.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
-        <div class="d-flex justify-content-center">
-            {{ $classAttendances->links('vendor.pagination.bootstrap-5') }}
-        </div>
 
+        <!-- Pagination -->
+        <div class="d-flex justify-content-center">
+            {{ $attendanceSection->links() }}
+        </div>
     </div>
 </div>
 @endsection

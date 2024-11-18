@@ -31,11 +31,10 @@
             </form>
         </div>
         @if(!Auth::user()->isAdmin())
-        <form action="{{ route('mark.attendance') }}" method="POST">
+        <form id="mark_attendance">
             @csrf
             <ul id="list_students">
-                <li class="text-muted">No students present so far...</li>
-                <button type="submit" class="btn btn-primary mb-2" id="mark_attendance">Mark attendance</button>
+
             </ul>
         </form>
         @endif
@@ -49,12 +48,40 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
 
-        console.log("{{$sectionId}}");
+        if(@json(Auth::user()->isTeacher())){
+            iJustWannaGraduate();
+                document.getElementById('mark_attendance').addEventListener('click', function(event) {
+                    event.preventDefault(); 
+
+                    fetch("{{ route('mark.attendance') }}", {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': routesAndToken.csrf,
+                            'Accept': 'application/json',
+                        },
+                    })
+                    .then((response) => response.json()) 
+                    .then((data) => {
+                        if (data.success) {
+                            console.log('Attendance marked successfully');
+                            sessionStorage.clear(); 
+
+                            iJustWannaGraduate();
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+                });
+        }
+
+        
+        console.log("{{$sectionId ?? ''}}");
         console.log(sessionStorage.getItem('section'));
-        if(sessionStorage.getItem('section') !== "{{ $sectionId }}"){
+        if(sessionStorage.getItem('section') !== "{{$sectionId ?? ''}}"){
             sessionStorage.clear();
         }
-        sessionStorage.setItem('section', "{{ $sectionId }}");
+        sessionStorage.setItem('section', "{{$sectionId ?? ''}}");
 
 
         if(sessionStorage.getItem('{{ Auth::user()->id }}')){
@@ -79,7 +106,7 @@
         
 
             let formData = new FormData(document.getElementById('tag_form'));
-            formData.append('section', "{{ $sectionId }}");
+            formData.append('section', "{{ $sectionId ?? ''}}");
             fetch(routesAndToken.verify, {
                 method: 'post',
                 headers: {
@@ -137,6 +164,12 @@
             studentList ? studentList += `<button type="submit" class="btn btn-primary mb-2" id="mark_attendance">Mark attendance</button>` : ``;
             document.getElementById('list_students').innerHTML = studentList;
 
+        }
+        function iJustWannaGraduate(){
+            let studentListElement = document.getElementById('list_students');
+            if (studentListElement) {
+                studentListElement.innerHTML = `<li class="text-muted">No students present so far...</li>`;
+            }
         }
     });
 </script>

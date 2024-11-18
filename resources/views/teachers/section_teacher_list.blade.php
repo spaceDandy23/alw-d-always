@@ -26,7 +26,7 @@
                             </button>
                             <form action="{{ route('verify') }}" class="d-inline-block">
                                 <input type="hidden" name="section" value="{{ $section }}">
-                                <button class="btn btn-primary"><i class="bi bi-check-circle"></i> Check Attendance</button>
+                                <button class="btn btn-primary"><i class="bi bi-check-circle"></i> Check Class Attendance</button>
                             </form>
                             <button 
                                 class="btn btn-danger mx-2" 
@@ -44,24 +44,105 @@
                         @else
                             <form action="{{ route('unenroll.students') }}" method="POST">
                                 @csrf
-                                <ul class="list-group">
-                                    @foreach($students as $student)
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            {{ $student->name }} (ID: {{ $student->id }})
-                                            
-                                            <div>
-                                                <input type="hidden" name="students[{{$student->id}}][]" value=" ">
-                                                <input 
-                                                    type="checkbox" 
-                                                    name="students[{{$student->id}}][]" 
-                                                    value=" " 
-                                                    class="form-check-input" 
-                                                    {{ !$student->pivot->enrolled ? 'checked' : '' }}>
-                                                <label for="unenroll_{{ $student->name }}" class="form-check-label">{{ !$student->pivot->enrolled ? 'Unenrolled' : 'Unenroll'}}</label>
-                                            </div>
-                                        </li>
-                                    @endforeach
-                                </ul>
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Attendance</th>
+                                            <th>RFID Logs</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($students as $student)
+                                            <tr>
+                                                <td>{{ $student->name }} (ID: {{ $student->id }})</td>
+                                                <td>
+                                                    <button 
+                                                        type="button" 
+                                                        class="btn btn-info btn-sm" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#attendanceModal{{ $student->id }}">
+                                                        View Attendance
+                                                    </button>
+                                                    <!-- Attendance Modal -->
+                                                    <div class="modal fade" id="attendanceModal{{ $student->id }}" tabindex="-1" aria-labelledby="attendanceModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog modal-lg">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="attendanceModalLabel">Attendance for {{ $student->name }}</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    @foreach($student->attendances as $attendance)
+                                                                        <div class="mb-3">
+                                                                            <p>Date: {{ $attendance->date }}</p>
+                                                                            <p>Status Morning: {{ $attendance->status_morning ?? 'N/A' }}</p>
+                                                                            <p>Status Lunch: {{ $attendance->status_lunch ?? 'N/A' }}</p>
+                                                                        </div>
+                                                                    @endforeach
+                                                                    @if($student->attendances->isEmpty())
+                                                                        <p class="text-muted">No records so far.</p>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <button 
+                                                        type="button" 
+                                                        class="btn btn-warning btn-sm" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#rfidModal{{ $student->id }}">
+                                                        View RFID Logs
+                                                    </button>
+                                                    <!-- RFID Modal -->
+                                                    <div class="modal fade" id="rfidModal{{ $student->id }}" tabindex="-1" aria-labelledby="rfidModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="rfidModalLabel">RFID Logs for {{ $student->name }}</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    @foreach($student->rfidLogs as $log)
+                                                                        <div class="mb-3">
+                                                                            <p>Date: {{ $log->date }}</p>
+                                                                            <p>Check-in: {{ $log->check_in ?? 'N/A' }}</p>
+                                                                            <p>Check-out: {{ $log->check_out ?? 'N/A' }}</p>
+                                                                        </div>
+                                                                    @endforeach
+                                                                    @if($student->rfidLogs->isEmpty())
+                                                                        <p class="text-muted">No records so far.</p>
+                                                                    @endif
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div>
+                                                        <input type="hidden" name="students[{{$student->id}}][]" value=" ">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            name="students[{{$student->id}}][]" 
+                                                            value=" " 
+                                                            class="form-check-input" 
+                                                            {{ !$student->pivot->enrolled ? 'checked' : '' }}>
+                                                        <label for="unenroll_{{ $student->name }}" class="form-check-label">{{ !$student->pivot->enrolled ? 'Unenrolled' : 'Unenroll'}}</label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                                 <button type="submit" class="btn btn-warning mt-3">Save changes</button>
                             </form>
                         @endif
@@ -69,6 +150,7 @@
                 </div>
             @endforeach
 
+            <!-- Modal for Adding Sections -->
             <div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -136,15 +218,11 @@
 <script>
     function toggleSection(section) {
         const sectionElement = document.getElementById(`section-${section}`);
-        if (sectionElement.style.display === "none" || sectionElement.style.display === "") {
-            sectionElement.style.display = "block";
-        } else {
-            sectionElement.style.display = "none";
-        }
+        sectionElement.style.display = sectionElement.style.display === "none" || sectionElement.style.display === "" ? "block" : "none";
     }
 
-    function setRemoveClassId(sectionId) {
-        document.getElementById('sectionIdToRemove').value = sectionId;
+    function setRemoveClassId(section) {
+        document.getElementById('sectionIdToRemove').value = section;
     }
 </script>
 

@@ -11,10 +11,13 @@ class Section extends Model
 
 
 
-    protected $fillable = ['grade', 'section'];
+    protected $fillable = ['grade', 'section','import_batch_id'];
 
 
-
+    public function importBatch()
+    {
+        return $this->belongsTo(ImportBatch::class);
+    }
     public function students(){
         return $this->hasMany(Student::class);
     }

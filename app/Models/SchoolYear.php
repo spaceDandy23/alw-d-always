@@ -9,7 +9,7 @@ class SchoolYear extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['year', 'is_active'];
+    protected $fillable = ['year', 'is_active', 'import_batch_id'];
 
     public function students()
     {

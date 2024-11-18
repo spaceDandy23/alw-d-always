@@ -145,7 +145,7 @@
                 </div>
                 <div class="col-md-6">
                     <p>Total Days Recorded: <span id="total-days">{{ $overallAttendanceSummary['totalDaysRecorded'] }}</span></p>
-                    <p>Average Attendance Rate Among All Students: <span id="attendance-rate">{{ $overallAttendanceSummary['overallAverageAttendanceRate'] }} %</span></p>
+                    <p>Average Attendance Rate Among All Students: <span id="attendance-rate">{{ number_format($overallAttendanceSummary['overallAverageAttendanceRate'],2) }} %</span></p>
                 </div>
             </div>
         </div>

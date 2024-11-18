@@ -1,13 +1,13 @@
 @extends('layouts.master')
 
-@section('page_title', 'Special Occasions')
+@section('page_title', 'Occasions')
 
 @section('content')
 
 <div class="row justify-content-center">
     <div class="col">
         <div class="d-flex justify-content-center mb-2">
-            <a href="#" class="btn btn-primary mx-4" data-bs-toggle="modal" data-bs-target="#createOccasion">Add Special Occasion</a>
+            <a href="#" class="btn btn-primary mx-4" data-bs-toggle="modal" data-bs-target="#createOccasion">Add Occasion</a>
         </div>
         <table class="table table-striped">
             <thead>

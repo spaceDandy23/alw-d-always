@@ -22,7 +22,7 @@ Route::middleware('prevent.back')->group(function () {
 
         Route::get('/', [AdminController::class, 'index'])->name('dashboard');
 
-
+        Route::post('/undo/{id}', [AdminController::class, 'undoImport'])->name('import.undo');
         
         Route::get('logs/filter', [RfidController::class, 'search'])->name('logs.filter');
         Route::get('logs', [RfidController::class, 'index'])->name('logs.index');

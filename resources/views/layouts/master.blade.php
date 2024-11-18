@@ -76,7 +76,7 @@
                 <a class="nav-link" href="{{ route('users.index') }}">Users</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('holidays.index') }}">Special Occasions</a>
+                <a class="nav-link" href="{{ route('holidays.index') }}"> Occasions</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('excuse.cancel.index') }}">Excuse</a>

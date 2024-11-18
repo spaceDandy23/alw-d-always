@@ -33,28 +33,29 @@
                                 <td>{{ $attendance->student->name }}</td>
                                 <td>{{ $attendance->student->section->grade }}-{{ $attendance->student->section->section }}</td>
                                 <td>
+                                    @if($attendance->status_morning !== 'present')
                                     <label>
                                         <input type="hidden" name="attendance[{{ $attendance->id }}][status_morning]" value="">
                                         <input type="checkbox" name="attendance[{{ $attendance->id }}][status_morning]" value="excused" 
                                         {{ $attendance->status_morning === 'excused' ? 'checked' : '' }}>
                                         Excused (Morning)
                                     </label>
+                                    @endif
                                 </td>
                                 <td>
+                                    @if($attendance->status_lunch !== 'present')
                                     <label>
                                         <input type="hidden" name="attendance[{{ $attendance->id }}][status_lunch]" value="">
                                         <input type="checkbox" name="attendance[{{ $attendance->id }}][status_lunch]" value="excused" 
                                         {{ $attendance->status_lunch === 'excused' ? 'checked' : '' }}>
                                         Excused (Lunch)
                                     </label>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
-                <div class="d-flex justify-content-center">
-                    {{ $attendances->links('vendor.pagination.bootstrap-5') }}
-                </div>
                 <button type="submit" class="btn btn-primary mt-3">Apply Excuse</button>
                 @else
                     <p>No attendance records found.</p>

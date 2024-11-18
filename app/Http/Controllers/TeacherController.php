@@ -16,87 +16,90 @@ use Session;
 
 class TeacherController extends Controller
 {
-    public function index(){
+    public function index()
+    {
 
+        $activeSchoolYear = SchoolYear::latest()->first() ?? '';
+    
+        $attendanceTrends = AttendanceSectionTeacher::where('teacher_id', Auth::id())
+        ->join('sections', 'attendance_section_teachers.section_id', '=', 'sections.id')
+        ->selectRaw(
+            "CONCAT('Grade ', sections.grade, ' - ', sections.section) as section_label, 
+            DATE_FORMAT(date, '%Y-%m') as month,  -- Format the date to Year-Month
+            SUM(present) as present, 
+            COUNT(*) - SUM(present) as absent"
+        )
+        ->groupBy('section_label', 'month')  
+        ->orderBy('month')  
+        ->get()
+        ->groupBy('section_label');  
+    
 
-        $activeSchoolYear = SchoolYear::latest()->first()->id ?? '';
-        $studentIds = Auth::user()->students()->pluck('id');
-
-        $recentAttendanceRecords = Attendance::whereDate('date', today())->paginate(5);
-        
-        $perfectAttendance = Attendance::select('student_id', DB::raw('
-        COUNT(CASE WHEN status_morning = "absent" THEN 1 END) as total_morning,
-        COUNT(CASE WHEN status_lunch = "absent" THEN 1 END) as total_lunch
-        '))
-        ->whereHas('student', function($q) use($activeSchoolYear){
-            return $q->where('school_year_id', $activeSchoolYear);
-        })
-        ->whereIn('attendances.student_id', $studentIds)
-        ->groupBy('student_id')
-        ->having('total_morning', '=', 0) 
-        ->having('total_lunch', '=', 0)   
-        ->paginate(5);
-
-        
-
-
-
-        $absentAlot = Attendance::select('student_id', DB::raw('
-            SUM(CASE WHEN status_morning = "absent" THEN 0.5 ELSE 0 END) +
-            SUM(CASE WHEN status_lunch = "absent" THEN 0.5 ELSE 0 END) as total_absent
-        '))
-        ->whereHas('student', function($q) use($activeSchoolYear){
-            return $q->where('school_year_id', $activeSchoolYear);
-        })
-        ->whereIn('attendances.student_id', $studentIds)
-        ->having('total_absent', '>=', 5)
-        ->groupBy('student_id')
-        ->paginate(5);
-
-
-
-        $attendanceTrend = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
-        ->join('sections', 'students.section_id', '=', 'sections.id')
-        ->select(DB::raw('
-            CONCAT(sections.grade, " - ", sections.section) as section_name, 
-            YEAR(date) as year, 
-            MONTH(date) as month,
-            SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END) + SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END)
-            AS total_present
-        '))
-        ->where('students.school_year_id', $activeSchoolYear)
-        ->whereIn('attendances.student_id', $studentIds)
-        ->groupBy('students.grade', 'students.section', DB::raw('YEAR(date), MONTH(date)'))
+        $absentAlot = AttendanceSectionTeacher::join('students', 'attendance_section_teachers.student_id', '=', 'students.id')
+        ->select('students.id', 'students.name', 'attendance_section_teachers.section_id', DB::raw('COUNT(*) as total_absent'))
+        ->where('attendance_section_teachers.teacher_id', Auth::id())  
+        ->where('attendance_section_teachers.present', 0)  
+        ->groupBy('students.id', 'attendance_section_teachers.section_id', 'students.name')
+        ->havingRaw('COUNT(*) >= 3')
         ->get();
 
 
 
+        $overallAverageAttendancePercentage = AttendanceSectionTeacher::where('teacher_id', Auth::id())
+            ->join('sections', 'attendance_section_teachers.section_id', '=', 'sections.id')
+            ->selectRaw(
+                "CONCAT('Grade ', sections.grade, ' - ', sections.section) as section_label, 
+                attendance_section_teachers.section_id as section_id, 
+                (SUM(present) / COUNT(*)) * 100 as attendance_percentage"
+            )
+            ->groupBy('attendance_section_teachers.section_id', 'sections.grade', 'sections.section')
+            ->orderBy('sections.grade')
+            ->get();
+    
 
-        $attendanceBySection = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
-        ->select('students.grade', 'students.section', DB::raw('
-            (
-            SUM(CASE WHEN status_lunch = "present" THEN 0.5 ELSE 0 END) +
-            SUM(CASE WHEN status_morning = "present" THEN 0.5 ELSE 0 END)
-            )/(
-            SUM(CASE WHEN status_lunch IN ("present", "absent") THEN 0.5 ELSE 0 END) +
-            SUM(CASE WHEN status_morning IN ("present", "absent") THEN 0.5 ELSE 0 END)
-            ) as section_overall
+        $totalStudents = Auth::user()->students()->count();
         
-        '))
-        ->whereIn('attendances.student_id', $studentIds)
-        ->where('students.school_year_id', $activeSchoolYear)
-        ->groupBy('students.grade', 'students.section')
-        ->get();
+        $totalDaysRecorded = $attendanceTrends->flatMap(function ($sectionData) {
+            return $sectionData->pluck('date');
+        })->unique()->count();
 
+    
+        $totalPresent = $attendanceTrends->flatMap(function ($sectionData) {
+            return $sectionData->pluck('present');
+        })->sum();
+    
+        if ($totalStudents > 0 && $totalDaysRecorded > 0) {
+            $attendanceRate = $totalPresent / ($totalStudents * $totalDaysRecorded) * 100;
+        } else {
+            $attendanceRate = 0; 
+        }
+    
 
-
-        return view('teachers.teacher_dashboard',compact('activeSchoolYear', 
-        'recentAttendanceRecords', 'absentAlot', 'attendanceTrend', 'attendanceBySection', 'perfectAttendance'));
-
+        return view('teachers.teacher_dashboard', compact(
+            'activeSchoolYear',
+            'attendanceTrends',
+            'overallAverageAttendancePercentage',
+            'totalStudents',
+            'totalDaysRecorded',
+            'attendanceRate',
+            'absentAlot'
+        ));
     }
+    
     public function classIndex(){
 
-        $studentsAuth = Auth::user()->students()->get();
+        $studentsAuth = Auth::user()->students()
+        ->with(['attendances' => function($query) {
+            $query->where('date', today());
+        }])
+        ->with(['rfidLogs' => function($query){
+            $query->where('date', today());
+
+        }])
+        ->get();
+
+
+
         $groupedBySection = $studentsAuth->groupBy(function($student) {
             return "{$student->section->grade}-{$student->section->section}"; 
         });
@@ -130,10 +133,13 @@ class TeacherController extends Controller
         })
         ->get()
         ->pluck('id');
+        AttendanceSectionTeacher::where('teacher_id', Auth::id())
+        ->whereIn('student_id', $studentIds)
+        ->delete();
 
         Auth::user()->students()->detach($studentIds);
 
-        return redirect()->route('class.index')->with('success', 'Watchlist deleted');
+        return redirect()->route('class.index')->with('success', 'Class deleted');
 
     }
 
@@ -209,13 +215,21 @@ class TeacherController extends Controller
 
 
 
-        return redirect()->back()->with('success', 'Attendance Marked');
+        return response()->json([
+            'success' => true
+        ]);
         
     }
     public function classAttendance(){
 
-        $classAttendances = Auth::user()->attendanceStudents()->paginate(30);
-        return view('teachers.class_attendance', compact('classAttendances'));
+        $attendanceSection = AttendanceSectionTeacher::where('teacher_id', Auth::id())
+        ->whereHas('student', function($q){
+
+            return $q->where('school_year_id', SchoolYear::latest()->first()->id ?? '');
+        })
+        ->with('section','student')
+        ->paginate();
+        return view('teachers.class_attendance', compact('attendanceSection'));
 
 
 
@@ -251,57 +265,64 @@ class TeacherController extends Controller
         if ($endTime) {
             $endTime = Carbon::createFromFormat('H:i', $endTime)->format('H:i'); 
         }
+  
+        $sectionIds = Section::when($grade, function($q) use ($grade) {
+            $q->where('grade', $grade);
+        })
+        ->when($section, function($q) use ($section) {
+            $q->where('section', $section);
+        })
+        ->pluck('id');
+    
+        $attendanceSection = AttendanceSectionTeacher::when($setOfNames, function($q) use($setOfNames){
+            return $q->whereHas('student', function($q)use($setOfNames){
+                    foreach ($setOfNames as $name) {
+                        $name = trim($name);
+                        $q->where('name', 'LIKE', "%{$name}%");
+                    }
+                        $q->where('school_year_id', SchoolYear::latest()->first()->id ?? '');
 
-        $classAttendances = Auth::user()->attendanceStudents()
-            ->when($setOfNames, function($q, $setOfNames){
-                foreach ($setOfNames as $name) {
-                    $name = trim($name);
-                    $q->where('name', 'LIKE', "%{$name}%");
-                }
+                });
             })
-            ->when($grade, function($q, $grade){
-                return $q->where('grade', $grade);
+            ->when($sectionIds, function($q) use($sectionIds){
+                return $q->whereIn('section_id', $sectionIds);
             })
-            ->when($section, function($q, $section) {
-                return $q->where('section', $section);
-            });
+            ->where('teacher_id', Auth::id());
+
+
+
+
         if ($startDate && $endDate) {
-            $classAttendances->where('date', '>=', $startDate)
+            $attendanceSection->where('date', '>=', $startDate)
                              ->where('date', '<=', $endDate);
         } elseif ($startDate) {
-            $classAttendances->where('date', '>=', $startDate);
+            $attendanceSection->where('date', '>=', $startDate);
         } elseif ($endDate) {
-            $classAttendances->where('date', '<=', $endDate);
+            $attendanceSection->where('date', '<=', $endDate);
         }
-        if (isset($present)) {
-            $classAttendances->where('present', $present);
+        if ($present) {
+            $attendanceSection->where('present', $present);
         }
-    
         if ($startTime && $endTime) {
-            $classAttendances->where('time', '>=', $startTime)
+            $attendanceSection->where('time', '>=', $startTime)
                              ->where('time', '<=', $endTime);
         } elseif ($startTime) {
-            $classAttendances->where('time', '>=', $startTime);
+            $attendanceSection->where('time', '>=', $startTime);
         } elseif ($endTime) {
-            $classAttendances->where('time', '<=', $endTime);
+            $attendanceSection->where('time', '<=', $endTime);
         }
-        $classAttendances = $classAttendances->paginate(30)
+ 
+        $attendanceSection = $attendanceSection->paginate(30)
         ->appends($request->all());
 
-        dd($classAttendances->toArray());
 
-        return view('teachers.class_attendance', compact('classAttendances'));
+
+        return view('teachers.class_attendance', compact('attendanceSection'));
     }
 
-    public function updateClassAttendance(Request $request, $id){
+    public function updateClassAttendance(Request $request,  $id){
 
-
-        Auth::user()->attendanceStudents()
-        ->where('attendance_student_teacher.id', $id)
-        ->update([
-            'present' => $request->present
-        ]);
-
+        AttendanceSectionTeacher::find($id)->update(['present' => $request->present]);
         return back()->with('success', 'Student updated successfully');
     }
 }

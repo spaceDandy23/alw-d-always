@@ -8,6 +8,7 @@
     <div class="col">
         <div class="d-flex justify-content-center mb-2">
             <a href="#" class="btn btn-secondary mx-4" data-bs-toggle="modal" data-bs-target="#uploadCSV">Upload CSV</a>
+            <button class="btn btn-danger mx-4" data-bs-toggle="modal" data-bs-target="#undoImportModal">Undo Import</button>
         </div>
 
         <div class="p-4">
@@ -118,6 +119,7 @@
                                         <h5 class="modal-title" id="editStudentLabel{{ $student->id }}">Edit Student</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
+                                    
                                     <div class="modal-body">
                                         <form action="{{ route('students.update', $student->id) }}" method="post" id="form_edit">
                                             @csrf
@@ -210,11 +212,49 @@
                         <label for="end_year" class="form-label">End Year</label>
                         <input type="text" class="form-control" id="end_year" name="end_year" readonly>
                     </div>
+                    @if($activeSchoolYear)
+                    <div class="alert alert-warning" id="uploadWarning">
+                        <strong>Warning!</strong> Uploading the CSV with the same school year will add new students to the existing batch. Please confirm before proceeding.
+                    </div>
+                    @endif
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">Upload CSV</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="undoImportModal" tabindex="-1" aria-labelledby="undoImportModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="undoImportModalLabel">Undo Batch Import</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to undo one of the following import batches? This action will remove all records that were added in the selected import batch.</p>
+                @if($importBatches->count() > 0)
+                    <ul class="list-group">
+                        @foreach ($importBatches as $batch)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Batch ID: {{ $batch->id }} - Imported On: {{ $batch->created_at->format('F j, Y h:i A') }},
+                                Batch Name: {{ $batch->batch_name }}
+                                <form action="{{ route('import.undo', $batch->id) }}" method="POST" class="ms-2">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger btn-sm">Undo</button>
+                                </form>
+                            </li>
+  
+                        @endforeach
+                    </ul>
+                @else
+                    <p>No import batches available.</p>
+                @endif
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

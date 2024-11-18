@@ -67,8 +67,9 @@ class AttendanceController extends Controller
             $attendances->whereHas('student', function($q){
                 return $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
             });
-
+    
         }
+
         elseif(Auth::user()->isTeacher()){
             $attendances->whereHas('student', function($q){
                 return $q->where('school_year_id', SchoolYear::latest()->first()->id ?? '');
@@ -114,13 +115,11 @@ class AttendanceController extends Controller
 
         $fromExcuse = $request->input('from_cancel_excuse');
         if($fromExcuse){
-
             $attendances = $this->getStudentsAttendance($name, $grade, $section, $startDate, $endDate, $fromExcuse)
             ->with('student')
             ->paginate(30)
             ->appends($request->all());
             return view('attendances.cancel_excuse_students', compact('attendances'));
-
 
         }
         $fatherlessChild = $this->getStudentsAttendance($name, $grade, $section,$startDate, $endDate);
@@ -166,19 +165,16 @@ class AttendanceController extends Controller
 
     public function attendances(Request $request){
 
-
-        if ($request->has('attendance')) {
-            session()->put('attendance_status', $request->attendance);
-        }
-        $attendances = Attendance::latest()
-        ->whereIn('status_morning', ['excused', 'absent'])
-        ->orWhereIn('status_lunch', ['excused', 'absent'])
-        ->whereHas('student', function($q){
-            return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
-
+        $attendances = Attendance::where(function ($query) {
+            $query->whereIn('status_morning', ['excused', 'absent'])
+                  ->orWhereIn('status_lunch', ['excused', 'absent']);
         })
-        ->paginate(30);
-
+        ->whereHas('student', function ($q) {
+            $activeSchoolYearId = SchoolYear::where('is_active', true)->value('id');
+            $q->where('students.school_year_id', $activeSchoolYearId);
+        })
+        ->limit(30)
+        ->get();
         return view('attendances.cancel_excuse_students', compact('attendances'));
 
     }
@@ -217,8 +213,6 @@ class AttendanceController extends Controller
 
 
         $records = Attendance::where('date', now()->format('Y-m-d'));
-
-
 
 
 

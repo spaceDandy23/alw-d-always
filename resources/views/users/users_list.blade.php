@@ -24,12 +24,17 @@
                     <tr>
                         <td>{{ $user->name }}</td>
                         <td>{{ $user->email }}</td>
-                        <td>{{ ucfirst($user->role) }}</td>
+                        <td>
+                        {{ ucfirst($user->role) }}
+                    
+                        </td>
                         <td>
                             <a class="btn btn-warning" href="#" data-bs-toggle="modal" data-bs-target="#editUser{{ $user->id }}">Edit</a>
+                            @if (Auth::id() !== $user->id)
                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ $user->id }}">
                                 Delete
                             </button>
+                            @endif
                             <!-- Edit User Modal -->
                             <div class="modal fade" id="editUser{{ $user->id }}" tabindex="-1" aria-labelledby="editUserLabel{{ $user->id }}" aria-hidden="true">
                                 <div class="modal-dialog">
@@ -48,12 +53,14 @@
                                                 <input type="email" class="form-control" id="email_{{ $user->id }}" name="email" value="{{ $user->email }}" >
                                                 <label for="password_{{ $user->id }}" class="form-label">Password</label>
                                                 <input type="password" class="form-control" id="password_{{ $user->id }}" name="password" >
+                                                @if(Auth::id() !== $user->id)
                                                 <label for="role_{{ $user->id }}" class="form-label">Role</label>
                                                 <select class="form-select" name="role" id="role_{{ $user->id }}">
                                                     @foreach ($roles as $role)
                                                         <option value="{{ $role }}" {{ $user->role === $role ? "selected" :  "" }}> {{ucfirst($role)}}</option>
                                                     @endforeach
                                                 </select>
+                                                @endif
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                                     <button type="submit" class="btn btn-primary">Save Changes</button>

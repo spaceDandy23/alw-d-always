@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
+use App\Models\Guardian;
+use App\Models\ImportBatch;
 use App\Models\SchoolYear;
+use App\Models\Section;
 use App\Models\Student;
 use Carbon\Carbon;
 use DB;
@@ -24,15 +27,12 @@ class AdminController extends Controller
         }
         $totalStudents = Student::where('school_year_id', $activeSchoolYear->id )
         ->count();
-        $totalDaysRecorded = Attendance::orderBy('date')
-        ->whereHas('student', function($query) use ($activeSchoolYear){
+
+        $totalDaysRecorded = Attendance::whereHas('student', function($query) use ($activeSchoolYear) {
             return $query->where('school_year_id', $activeSchoolYear->id);
         })
-        ->first();
+        ->count();
 
-        if($totalDaysRecorded){
-            $totalDaysRecorded = Carbon::parse($totalDaysRecorded->date)->diffInDays(today());
-        }
 
         $overallAverageAttendanceRate = Attendance::
         whereHas('student', function($query) use ($activeSchoolYear){
@@ -179,6 +179,26 @@ class AdminController extends Controller
 
         
         return redirect()->route('dashboard')->with('success', 'School Year changed successfully');
+    }
+    public function undoImport($importBatchId)
+    {
+
+    $importBatch = ImportBatch::findOrFail($importBatchId);
+    Student::where('import_batch_id', $importBatchId)->delete();
+    Guardian::where('import_batch_id', $importBatchId)->delete();
+    Section::where('import_batch_id', $importBatchId)->delete();
+
+    $importBatch->delete();
+
+
+    
+    $schoolYear = SchoolYear::latest()->first();
+    if($schoolYear){
+        $schoolYear->update(['is_active' => true]);
+    }
+
+
+    return redirect()->route('students.index')->with('success', 'Import undone successfully');
     }
 
 }

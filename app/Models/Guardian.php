@@ -10,8 +10,12 @@ class Guardian extends Model
     use HasFactory;
 
 
-    protected $fillable = ['name','contact_info'];
+    protected $fillable = ['name','contact_info','school_year_id', 'import_batch_id'];
 
+    public function importBatch()
+    {
+        return $this->belongsTo(ImportBatch::class);
+    }
 
     public function students(){
         return $this->belongsToMany(Student::class, 'guardian_student')->withPivot('relationship_to_student');

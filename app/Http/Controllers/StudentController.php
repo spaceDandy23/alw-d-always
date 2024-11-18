@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attendance;
 use App\Models\Guardian;
+use App\Models\ImportBatch;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Student;
@@ -141,8 +142,9 @@ class StudentController extends Controller
 
             $students = $this->searchQuery($name, $grade, $section)->paginate(10);
             $students->appends($request->all());
+            $sections = Section::all();
 
-            return view('students.students_list', compact('students', 'relationships'));
+            return view('students.students_list', compact('students', 'relationships','sections'));
 
         }
 
@@ -158,6 +160,11 @@ class StudentController extends Controller
             'start_year' => 'required'
         ]);
 
+        $importBatch = ImportBatch::updateOrCreate(
+            ['batch_name' => "Import for {$request->input('start_year')} - {$request->input('end_year')}"], 
+            ['imported_at' => now()] 
+        );
+
         SchoolYear::where('is_active', true)->update(['is_active' => false]);
 
         $directory = 'public/csv';
@@ -171,7 +178,8 @@ class StudentController extends Controller
             ['year' => "{$startYear} - {$endYear}"],
             ['is_active' => true,
                     'created_at' => now(),
-                    'updated_at' => now()]
+                    'updated_at' => now(),
+                    'import_batch_id' => $importBatch->id]
         
         );
 
@@ -185,15 +193,13 @@ class StudentController extends Controller
         $expectedHeader = ['last name', 'first name', 'middle name', 'grade', 'section','guardian name', 'relationship to student', 'phone number'];
 
 
-
-        for ($i = 0; $i < count($expectedHeader); $i++){
-            if($header[$i] != $expectedHeader[$i]){
-
-                return back()->with('error', 'Header does not match expected header');
+        for ($i = 0; $i < count($expectedHeader); $i++) {
+            if ($header[$i] !== $expectedHeader[$i]) {
+                return back()->with('error', "Header mismatch: Expected '{$expectedHeader[$i]}', found '{$header[$i]}' at position {$i}.");
             }
         }
     
-        DB::transaction(function() use ($csvFile, $header, $schoolYearRecord) {
+        DB::transaction(function() use ($csvFile, $header, $schoolYearRecord, $importBatch) {
             while (($row = fgetcsv($csvFile)) !== false) {
                 $data = array_combine($header, $row);
 
@@ -201,8 +207,9 @@ class StudentController extends Controller
 
                 $section = Section::firstOrCreate([
                     'grade' => $data['grade'],
-                    'section' => $data['section']
-                    ]
+                    'section' => $data['section'],
+                ],
+                [                    'import_batch_id' => $importBatch->id],
                 );
 
 
@@ -210,23 +217,24 @@ class StudentController extends Controller
                     [
                         'name' => "{$data['last name']}, {$data['first name']} {$data['middle name']}",
                         'school_year_id' => $schoolYearRecord->id,
-                        'section_id' => $section->id
-
+                        'section_id' => $section->id,
                     ],
                     [
                         'created_at' => now(),
                         'updated_at' => now(),
+                        'import_batch_id' => $importBatch->id
                     ]
                 );
 
                 $guardian = Guardian::firstOrCreate(
                     [
                         'name' => $data['guardian name'],
-                        'contact_info' => $data['phone number']
+                        'contact_info' => $data['phone number'],
                     ],
                     [
                         'created_at' => now(),
                         'updated_at' => now(),
+                        'import_batch_id' => $importBatch->id
                     ]
                 );
     
@@ -343,7 +351,10 @@ class StudentController extends Controller
             'Sibling',
             'Other'
         ];
-        return view('students.students_list', compact('students',  'relationships', 'sections'));
+
+        $activeSchoolYear = SchoolYear::where('is_active', true)->first();
+        $importBatches = ImportBatch::all();
+        return view('students.students_list', compact('students',  'relationships', 'sections', 'importBatches', 'activeSchoolYear'));
 
     }
 
