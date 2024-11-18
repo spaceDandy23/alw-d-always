@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\CheckOccasionJob;
+use App\Jobs\SendMessageJob;
 use App\Models\Attendance;
 use App\Models\AttendanceSectionTeacher;
+use App\Models\Holiday;
 use App\Models\RfidLog;
 use App\Models\SchoolYear;
 
@@ -128,6 +131,10 @@ class RfidController extends Controller
 
         if($request->isMethod('post')){
 
+            if($this->checkHoliday()){
+
+                return response()->json(['success' => false, 'message' => 'no class']);
+            }
 
             if(Auth::user()->isTeacher()){
                 return $this->verifyFromTeacher($request);
@@ -170,7 +177,7 @@ class RfidController extends Controller
                 if ($student) {
                     if (!$student->check_out) {
                         $student->update(['check_out' => now()->format('H:i:s')]);
-                        // $output = $this->message($studentTag->student->id, 'student left');
+                        // $this->message($studentTag->id, 'student left');
                     } else {
                         RfidLog::create([
                             'student_id' => $studentTag->id,
@@ -178,7 +185,7 @@ class RfidController extends Controller
                             'date' => $todayDate,
                             'tag_id' => $studentTag->tag->id
                         ]);
-                        // $output = $this->message($studentTag->student->id, 'student went in');
+                        // $this->message($studentTag->id, 'student went in');
                     }
                 } else {
                     RfidLog::create([
@@ -188,7 +195,7 @@ class RfidController extends Controller
                         'tag_id' => $studentTag->tag->id
                     ]);
                     
-                    // $output = $this->message($studentTag->student->id, 'student went in');
+                    // $this->message($studentTag->id, 'student went in');
                 }
 
 
@@ -245,34 +252,15 @@ class RfidController extends Controller
     }
     public function message($studentID, $message){
 
-        $outputArr = [];
+
         $student = Student::find($studentID);
 
+
+
         foreach($student->guardians as $guardian){
-            $ch = curl_init();
-            $parameters = array(
-                'apikey' => env('SEMAPHORE_API_KEY'), 
-                'number' => $guardian->contact_info,
-                'message' => $message,
-                'sendername' => 'Alwad'
-            );
-
-            curl_setopt( $ch, CURLOPT_URL,'https://api.semaphore.co/api/v4/messages' );
-            curl_setopt( $ch, CURLOPT_POST, 1 );
-
-
-            curl_setopt( $ch, CURLOPT_POSTFIELDS, http_build_query( $parameters ) );
-
-            curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-
-            $output = curl_exec( $ch );
-            curl_close ($ch);
-
-
-
-            array_push($outputArr, $guardian);
+            SendMessageJob::dispatch($guardian->contact_info, $message);
         }
-        return $outputArr;
+
     }
 
     public function verifyFromTeacher($request){
@@ -344,5 +332,25 @@ class RfidController extends Controller
 
         ]);
 
+    }
+
+    public function checkHoliday(){
+
+
+        
+        $holidays = Holiday::all();
+        foreach($holidays as $holiday){
+
+            $startDate = now()->setMonth($holiday->month)->setDay($holiday->day)->format('Y-m-d');
+
+            $endDate = !$holiday->end_month && !$holiday->end_day 
+            ? $startDate 
+            : now()->setMonth($holiday->end_month)->setDay($holiday->end_day)->format('Y-m-d');
+
+            if (today() >= $startDate && ($endDate === $startDate || today() <= $endDate)) {
+                return true;
+            }
+
+        }
     }
 }

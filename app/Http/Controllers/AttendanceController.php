@@ -230,7 +230,7 @@ class AttendanceController extends Controller
                                             'status_lunch' => 'present']);
         }
 
-        return back();
+        return back()->with('success', 'Class cancelled successfully');
 
 
     }

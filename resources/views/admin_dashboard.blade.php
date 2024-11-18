@@ -12,38 +12,38 @@
         Cancel Attendance For Today
     </button>
     <div class="modal fade" id="cancelAttendanceModal" tabindex="-1" aria-labelledby="cancelAttendanceModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="cancelAttendanceModalLabel">Cancel Attendance for Today</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('cancel.class.session') }}" method="POST">
-                <div class="modal-body">
-                    <p>Choose which sessions to cancel attendance for:</p>
-                        @csrf 
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="cancel_morning" value="1" id="cancel_morning">
-                            <label class="form-check-label" for="cancel_morning">
-                                Cancel Morning Session
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="cancel_lunch" value="1" id="cancel_lunch">
-                            <label class="form-check-label" for="cancel_lunch">
-                                Cancel Lunch Session
-                            </label>
-                        </div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelAttendanceModalLabel">Cancel Attendance for Today</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('cancel.class.session') }}" method="POST">
+                    <div class="modal-body">
+                        <p>Choose which sessions to cancel attendance for:</p>
+                            @csrf 
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="cancel_morning" value="1" id="cancel_morning">
+                                <label class="form-check-label" for="cancel_morning">
+                                    Cancel Morning Session
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="cancel_lunch" value="1" id="cancel_lunch">
+                                <label class="form-check-label" for="cancel_lunch">
+                                    Cancel Lunch Session
+                                </label>
+                            </div>
 
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-danger">Cancel Attendance</button>
-                </div>
-            </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Cancel Attendance</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
         <!-- Change School Year Modal -->
     <div class="modal fade" id="changeSchoolYearModal" tabindex="-1" aria-labelledby="changeSchoolYearModalLabel" aria-hidden="true">
