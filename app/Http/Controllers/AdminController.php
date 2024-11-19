@@ -147,7 +147,7 @@ class AdminController extends Controller
         $databaseName = env('DB_DATABASE');
         $username = env('DB_USERNAME');
         $password = env('DB_PASSWORD'); 
-        $backupPath = storage_path('app/backups/backup_' . date('Y_m_d_His'));
+        $backupPath = storage_path('app/backups/backup_' . date('Y_m_d_His') . '.sql');
     
         if (!file_exists(dirname($backupPath))) {
             mkdir(dirname($backupPath), 0777, true);
