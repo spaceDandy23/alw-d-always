@@ -18,7 +18,7 @@
                     <h5 class="modal-title" id="cancelAttendanceModalLabel">Cancel Attendance for Today</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form action="{{ route('cancel.class.session') }}" method="POST">
+                <form action="{{ route('cancel.attendance.session') }}" method="POST">
                     <div class="modal-body">
                         <p>Choose which sessions to cancel attendance for:</p>
                             @csrf 

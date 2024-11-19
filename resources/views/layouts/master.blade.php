@@ -79,7 +79,10 @@
                 <a class="nav-link" href="{{ route('holidays.index') }}"> Occasions</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('excuse.cancel.index') }}">Excuse</a>
+                <a class="nav-link" href="{{ route('excuse.index') }}">Excuse</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ route('cancel.attendance.index') }}">Cancel Class</a>
             </li>
         </ul>
             @elseif(Auth::user()->isTeacher())

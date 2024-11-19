@@ -103,6 +103,7 @@ class TeacherController extends Controller
         $groupedBySection = $studentsAuth->groupBy(function($student) {
             return "{$student->section->grade}-{$student->section->section}"; 
         });
+
         $sections = Section::all();
 
         return view('teachers.section_teacher_list', compact('sections', 'groupedBySection'));

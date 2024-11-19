@@ -23,7 +23,7 @@ class AdminController extends Controller
         
 
         if(!$activeSchoolYear){
-            return view('admin_dashboard', compact('activeSchoolYear'));
+            return view('admin.admin_dashboard', compact('activeSchoolYear'));
         }
         $totalStudents = Student::where('school_year_id', $activeSchoolYear->id )
         ->count();
@@ -138,7 +138,7 @@ class AdminController extends Controller
 
         $schoolYears = SchoolYear::all();
         
-        return view('admin_dashboard', compact('overallAttendanceSummary', 'attendanceTrend',
+        return view('admin.admin_dashboard', compact('overallAttendanceSummary', 'attendanceTrend',
         'attendancePerMonth', 'perfectAttendance', 'absentAlot', 'recentAttendanceRecords',
                     'attendanceBySection', 'activeSchoolYear', 'schoolYears'));
     }

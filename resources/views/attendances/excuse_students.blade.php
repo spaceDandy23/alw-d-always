@@ -7,13 +7,13 @@
     <div class="col">
         <div class="p-4">
             <form action="{{ route('attendances.reports.filter') }}" method="GET" class="mb-4">
-                <input type="hidden" value="from_cancel_excuse" name="from_cancel_excuse">
+                <input type="hidden" value="from_excuse" name="from_excuse">
                 @include('partials.search_with_date')
                 <div class="col-auto">
                     <button class="btn btn-primary" type="submit">Filter</button>
                 </div>
             </form>
-            <form action="{{ route('excuse.cancel.apply') }}" method="POST">
+            <form action="{{ route('excuse.apply') }}" method="POST">
                 @csrf
                 @if(isset($attendances))
                 <table class="table table-striped">

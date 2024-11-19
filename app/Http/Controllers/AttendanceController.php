@@ -113,7 +113,7 @@ class AttendanceController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        $fromExcuse = $request->input('from_cancel_excuse');
+        $fromExcuse = $request->input('from_excuse');
         if($fromExcuse){
             $attendances = $this->getStudentsAttendance($name, $grade, $section, $startDate, $endDate, $fromExcuse)
             ->with('student')
@@ -175,11 +175,11 @@ class AttendanceController extends Controller
         })
         ->limit(30)
         ->get();
-        return view('attendances.cancel_excuse_students', compact('attendances'));
+        return view('attendances.excuse_students', compact('attendances'));
 
     }
 
-    public function excuseCancel(Request $request){
+    public function excuseApply(Request $request){
 
         if(!$request->attendance){
             return back()->with('error', 'No checkbox selected');
@@ -233,6 +233,13 @@ class AttendanceController extends Controller
         return back()->with('success', 'Class cancelled successfully');
 
 
+    }
+
+    public function cancelAttendance(){
+
+
+
+        return view('attendances.cancel_attendance');
     }
 
 }
