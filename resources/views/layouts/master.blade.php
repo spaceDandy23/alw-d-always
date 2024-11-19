@@ -82,7 +82,7 @@
                 <a class="nav-link" href="{{ route('excuse.index') }}">Excuse</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('cancel.attendance.index') }}">Cancel Class</a>
+                <a class="nav-link" href="{{ route('review.attendance.index') }}">Cancel Class</a>
             </li>
         </ul>
             @elseif(Auth::user()->isTeacher())

@@ -274,9 +274,12 @@ class RfidController extends Controller
             ]);
         }
 
+        $activeSchoolYear = SchoolYear::latest()->first() ?? '';
 
+        $activeSchoolYearId = $activeSchoolYear ? $activeSchoolYear->id : null;
 
         $student = Student::where('section_id', Session::get('section_id'))
+        ->where('school_year_id', $activeSchoolYearId)
         ->where('tag_id', $tag->id)
         ->with('section')
         ->first();

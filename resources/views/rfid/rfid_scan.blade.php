@@ -158,8 +158,8 @@
         }
         function generateStudents(sessionStudents = {}){
             let studentList = ``;
-            Object.values(sessionStudents).forEach(($value) => {
-                studentList += `<li> ${$value.name} </li>`;
+            Object.values(sessionStudents).forEach((value) => {
+                studentList += `<li> ${value.name} </li>`;
             });
             studentList ? studentList += `<button type="submit" class="btn btn-primary mb-2" id="mark_attendance">Mark attendance</button>` : ``;
             document.getElementById('list_students').innerHTML = studentList;

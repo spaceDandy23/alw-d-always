@@ -34,8 +34,7 @@ Route::middleware('prevent.back')->group(function () {
         Route::post('message/parents', [NotificationController::class,'massMessage'])->name('mass.message.parent');
         Route::post('message/parent/{student}', [NotificationController::class, 'messageParent'])->name('message.parent');
 
-
-
+        Route::match(['post', 'get'],'review/edit', [AttendanceController::class, 'editAttendance'])->name('edit.attendance');
         Route::resource('users', UserController::class);
         
 
@@ -54,6 +53,7 @@ Route::middleware('prevent.back')->group(function () {
 
         Route::post('change', [AdminController::class, 'changeSchoolYear'])->name('change.school.year');
 
+
         Route::get('guardians/filter', [GuardianController::class, 'search'])->name('guardians.filter');
         Route::resource('guardians', GuardianController::class);
         Route::get('notifications/filter', [NotificationController::class, 'search'])->name('notifications.filter');
@@ -61,7 +61,7 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('excuse', [AttendanceController::class, 'attendances'])->name('excuse.index');
         Route::post('excuse', [AttendanceController::class,'excuseApply'])->name('excuse.apply');
         Route::post('cancel', [AttendanceController::class, 'cancelClassSession'])->name('cancel.attendance.session');
-        Route::get('cancel/attendance', [AttendanceController::class, 'cancelAttendance'])->name('cancel.attendance.index');
+        Route::get('review', [AttendanceController::class, 'reviewAttendance'])->name('review.attendance.index');
     });
     Route::match(['post', 'get'], 'verify', [RfidController::class, 'verify'])->name('verify');
     Route::match(['post', 'get'], 'login', [AuthController::class, 'login'])->name('login')->middleware('guest');

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
+use App\Models\AttendanceSectionTeacher;
 use App\Models\SchoolYear;
 use App\Models\Student;
 use Auth;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Http\Request;
+use Session;
 
 class AttendanceController extends Controller
 {
@@ -212,18 +214,24 @@ class AttendanceController extends Controller
     public function cancelClassSession(Request $request){
 
 
+
+        if($request->selected_date){
+            $records = Attendance::where('date', $request->selected_date)
+            ->update([
+                'status_morning' => 'present', 
+                'status_lunch' => 'present']);
+
+            return back()->with('success', 'Cancelled successfully');
+
+        }
+
         $records = Attendance::where('date', now()->format('Y-m-d'));
-
-
-
         if(!$request->cancel_lunch){
             $records->update(['status_morning' => 'present']);
         }
         elseif($request->cancel_lunch && !$request->cancel_morning){
+            dd($request->cancel_lunch);
             $records->where('status_morning', 'present')->update(['status_lunch' => 'present']);
-            $records->each(function($record) {
-                $record->student->rfidLogs()->update(['check_out' => now()->format('12:00:00')]);
-            });
         }
         else{
             $records->update(['status_morning' => 'present',
@@ -235,11 +243,91 @@ class AttendanceController extends Controller
 
     }
 
-    public function cancelAttendance(){
+    public function reviewAttendance(){
 
 
 
-        return view('attendances.cancel_attendance');
+
+        $startDate = now()->subDays(5)->format('Y-m-d');
+        $nowDate = now()->format('Y-m-d');
+
+        $fullDay = Attendance::whereBetween('date', [$startDate, $nowDate])
+        ->select(DB::raw(
+            '(SUM(CASE WHEN status_lunch = "absent" THEN 1 END)/COUNT(*))*100 as total_lunch, 
+                    SUM(CASE WHEN status_morning = "absent" THEN 1 END)/COUNT(*)*100 as total_morning, date as unique_dates'))
+        ->groupBy('unique_dates')
+        ->having('total_lunch', '>=', 90)
+        ->having('total_morning', '>=', 90)
+        ->get();
+        // dd($fullDay->toArray());
+
+        return view('attendances.review_attendance', compact('fullDay'));
     }
 
+
+    public function editAttendance(Request $request){
+
+        if($request->isMethod('post')){
+
+
+
+            $studentIds = [];
+            for($i = 0; $i < count($request->students); $i++){
+
+                Attendance::find($request->students[$i]['id'])
+                ->update(['status_morning' => $request->students[$i]['status_morning'],
+                            'status_lunch' => $request->students[$i]['status_lunch']]
+                    );
+
+                array_push($studentIds, $request->students[$i]['id']);
+            }   
+
+
+
+            Attendance::where('date', $request->date)
+            ->whereNotIn('id', $studentIds)
+            ->update(['status_morning' => 'present', 'status_lunch' => 'present']);
+ 
+            return back()->with('success', 'Attendance record set to absent');
+        }
+
+        $name = $request->name;
+
+
+        $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
+        $setOfNames = explode(' ', $sanitizedName);
+
+
+        $grade = $request->grade;
+        $section = $request->section;
+
+        $attendances = 
+        Attendance::when($setOfNames, function($q, $setOfNames){
+            foreach ($setOfNames as $name) {
+                $name = trim($name);
+                $q->whereHas('student', function ($query) use ($name) {
+                    $query->where('name', 'LIKE', "%{$name}%");
+                });
+            }
+
+        })
+        ->when($grade, function($q, $grade) {
+            return $q->whereHas('student.section', function($q) use ($grade) {
+                $q->where('grade', $grade);
+            });
+        })
+        ->when($section, function($q, $section) {
+            return $q->whereHas('student.section', function($q) use ($section) {
+                $q->where('section', $section);
+            });
+        })
+        ->where('date', $request->date);
+
+        $queryAttendance = $attendances->paginate(30);
+
+        return view('attendances.edit_attendance', compact('queryAttendance'));
+
+    }
+
+ 
 }

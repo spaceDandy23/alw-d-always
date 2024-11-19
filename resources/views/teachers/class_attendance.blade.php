@@ -17,7 +17,7 @@
                         <select class="form-select" name="status" id="status">
                             <option value="">-- Select Status --</option>
                             @for($i = 0; $i <= 1; $i++)
-                                <option value="{{ $i }}">
+                                <option value="{{ $i }}" >
                                     {{ $i === 1 ? ucfirst('present') : ucfirst('absent') }}
                                 </option>
                             @endfor
