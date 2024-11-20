@@ -281,7 +281,7 @@ class AttendanceController extends Controller
         
 
             $previousIds = session('updated_attendance_ids', []);
-            $allIds = array_merge($previousIds, $studentIds);
+            $allIds = array_unique(array_merge($previousIds, $studentIds));
 
             session(['updated_attendance_ids' => $allIds]);
 
