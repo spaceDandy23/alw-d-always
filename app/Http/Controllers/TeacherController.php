@@ -290,7 +290,7 @@ class TeacherController extends Controller
             $q->where('section', $section);
         })
         ->pluck('id');
-    
+
         $attendanceSection = AttendanceSectionTeacher::when($setOfNames, function($q) use($setOfNames){
             return $q->whereHas('student', function($q)use($setOfNames){
                     foreach ($setOfNames as $name) {
@@ -309,7 +309,6 @@ class TeacherController extends Controller
 
 
 
-
         if ($startDate && $endDate) {
             $attendanceSection->where('date', '>=', $startDate)
                              ->where('date', '<=', $endDate);
@@ -318,12 +317,13 @@ class TeacherController extends Controller
         } elseif ($endDate) {
             $attendanceSection->where('date', '<=', $endDate);
         }
-        if ($present) {
-            $attendanceSection->where('present', $present);
-        }
-        else{
-            $attendanceSection->where('present', $present);
-        }
+        
+
+        $attendanceSection->when($present, function($q, $present) {
+            return $q->where('present', $present);
+
+        });
+
         if ($startTime && $endTime) {
             $attendanceSection->where('time', '>=', $startTime)
                              ->where('time', '<=', $endTime);

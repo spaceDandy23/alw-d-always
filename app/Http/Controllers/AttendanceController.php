@@ -213,24 +213,25 @@ class AttendanceController extends Controller
     }
     public function cancelClassSession(Request $request){
 
-
+        $records = Attendance::where('date', now()->format('Y-m-d'));
 
         if($request->selected_date){
-            $records = Attendance::where('date', $request->selected_date)
-            ->update([
-                'status_morning' => 'present', 
-                'status_lunch' => 'present']);
 
+            $records = Attendance::where('date', $request->unique_date)->first();
+            // ->update([
+            //     'status_morning' => 'present', 
+            //     'status_lunch' => 'present']);
+                dd($records);
             return back()->with('success', 'Cancelled successfully');
 
         }
 
-        $records = Attendance::where('date', now()->format('Y-m-d'));
+
         if(!$request->cancel_lunch){
             $records->update(['status_morning' => 'present']);
         }
         elseif($request->cancel_lunch && !$request->cancel_morning){
-            dd($request->cancel_lunch);
+
             $records->where('status_morning', 'present')->update(['status_lunch' => 'present']);
         }
         else{
@@ -250,16 +251,21 @@ class AttendanceController extends Controller
 
         $startDate = now()->subDays(5)->format('Y-m-d');
         $nowDate = now()->format('Y-m-d');
+        
 
-        $fullDay = Attendance::whereBetween('date', [$startDate, $nowDate])
+
+        $fullDay = Attendance::whereBetween('date',[$startDate, $nowDate])
         ->select(DB::raw(
-            '(SUM(CASE WHEN status_lunch = "absent" THEN 1 END)/COUNT(*))*100 as total_lunch, 
-                    SUM(CASE WHEN status_morning = "absent" THEN 1 END)/COUNT(*)*100 as total_morning, date as unique_dates'))
+            '(SUM(CASE WHEN status_lunch = "absent" THEN 1 END)/COUNT(*))*100 as total_lunch_absent, 
+                    SUM(CASE WHEN status_morning = "absent" THEN 1 END)/COUNT(*)*100 as total_morning_absent,  date as unique_dates
+                    
+                    
+                    '))
         ->groupBy('unique_dates')
-        ->having('total_lunch', '>=', 90)
-        ->having('total_morning', '>=', 90)
+        ->having('total_lunch_absent', '>=', 90)
+        ->Orhaving('total_morning_absent', '>=', 90)
         ->get();
-        // dd($fullDay->toArray());
+        // dd($fullDay->toArray(), $startDate, $nowDate);
 
         return view('attendances.review_attendance', compact('fullDay'));
     }
