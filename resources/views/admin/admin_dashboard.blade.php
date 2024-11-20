@@ -159,22 +159,6 @@
 
             <hr class="my-4">
 
-            <h5 class="card-title text-center fw-bold text-uppercase text-success">Students With Perfect Attendance</h5>
-            @if($perfectAttendance->isEmpty())
-                <p class="text-muted text-center">No students have perfect attendance.</p>
-            @else
-                <ul class="list-group list-group-flush">
-                    @foreach ($perfectAttendance as $student)
-                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
-                            {{ $student->student->name }}
-                            <span class="badge bg-success rounded-pill">Perfect Attendance</span>
-                        </li>
-                    @endforeach
-                </ul>
-            @endif
-
-            <hr class="my-4">
-
             <h5 class="card-title text-center fw-bold text-uppercase text-warning">Students with Frequent Absences</h5>
             @if($absentAlot->isEmpty())
                 <p class="text-muted text-center">No students with more than 4 absences.</p>

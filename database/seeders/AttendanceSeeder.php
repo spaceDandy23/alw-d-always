@@ -2,52 +2,38 @@
 
 namespace Database\Seeders;
 
-use App\Models\Attendance;
-use App\Models\RfidLog;
-use App\Models\Student;
-use Carbon\Carbon;
-use DB;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AttendanceSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run()
     {
-        $students = Student::all();
-        $startDate = Carbon::createFromDate(2024, 8, 1);
-        $endDate = Carbon::createFromDate(2024, 10, 31);
-        $dates = $startDate->daysUntil($endDate);
+        $students = DB::table('students')->pluck('id');
+        $startDate = Carbon::create(2024, 9, 1);
+        $endDate = Carbon::create(2024, 10, 31);
 
-        foreach ($dates as $date) {
-            foreach ($students as $student) {
-                $rfidLogs = RfidLog::where('student_id', $student->id)
-                    ->where('date', $date->format('Y-m-d'))
-                    ->get();
+        for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
+            foreach ($students as $studentId) {
+                DB::table('attendances')->insert([
+                    'student_id' => $studentId,
+                    'date' => $date->format('Y-m-d'),
+                    'status_morning' => 'present',
+                    'status_lunch' => 'present',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-                $statusMorning = 'absent';
-                $statusLunch = 'absent';
-                foreach ($rfidLogs as $log) {
-                    if (Carbon::parse($log->check_in_time)->format('H') < 12) {
-                        $statusMorning = 'present';
-                    } else {
-                        $statusLunch = 'present';
-                    }
-                }
-
-                Attendance::updateOrCreate(
-                    [
-                        'student_id' => $student->id,
-                        'date' => $date->format('Y-m-d'),
-                    ],
-                    [
-                        'status_morning' => $statusMorning,
-                        'status_lunch' => $statusLunch,
-                    ]
-                );
+                DB::table('rfid_logs')->insert([
+                    'student_id' => $studentId,
+                    'tag_id' => DB::table('students')->where('id', $studentId)->value('tag_id'),
+                    'date' => $date->format('Y-m-d'),
+                    'check_in' => $date->copy()->setTime(7, 30)->format('H:i:s'), 
+                    'check_out' => $date->copy()->setTime(17, 0)->format('H:i:s'), 
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
         }
     }

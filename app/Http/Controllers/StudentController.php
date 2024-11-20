@@ -434,7 +434,7 @@ class StudentController extends Controller
         ]);
 
 
-        if($student->tag){
+        if(!Tag::where('rfid_tag', $request->rfid_tag)->first()){
             TagHistory::create(['student_id' => $student->id, 'rfid_id' => $student->tag->id]);
             $tag = Tag::updateOrCreate(['rfid_tag' => $request->rfid_tag], ['rfid_tag' => $request->rfid_tag]);
             $student->update([

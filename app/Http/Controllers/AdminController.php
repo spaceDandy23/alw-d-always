@@ -66,17 +66,18 @@ class AdminController extends Controller
         ->get();
 
 
-        $perfectAttendance = Attendance::select('student_id', DB::raw('
-        COUNT(CASE WHEN status_morning = "absent" THEN 1 END) as total_morning,
-        COUNT(CASE WHEN status_lunch = "absent" THEN 1 END) as total_lunch
-        '))
-        ->whereHas('student', function($q) use($activeSchoolYear){
-            return $q->where('school_year_id', $activeSchoolYear->id);
-        })
-        ->groupBy('student_id')
-        ->having('total_morning', '=', 0) 
-        ->having('total_lunch', '=', 0)   
-        ->paginate(5);
+        // $perfectAttendance = Attendance::select('student_id', DB::raw('
+        // COUNT(CASE WHEN status_morning = "absent" THEN 1 END) as total_morning,
+        // COUNT(CASE WHEN status_lunch = "absent" THEN 1 END) as total_lunch
+        // '))
+        // ->whereHas('student', function($q) use($activeSchoolYear){
+        //     return $q->where('school_year_id', $activeSchoolYear->id);
+        // })
+        // ->groupBy('student_id')
+        // ->having('total_morning', '=', 0) 
+        // ->having('total_lunch', '=', 0)   
+        // ->limit(5)
+        // ->get();
 
 
 
@@ -90,7 +91,6 @@ class AdminController extends Controller
         ->having('total_absent', '>=', 5)
         ->groupBy('student_id')
         ->paginate(5);
-
 
 
         $overallAttendanceSummary = [
@@ -139,7 +139,7 @@ class AdminController extends Controller
         $schoolYears = SchoolYear::all();
         
         return view('admin.admin_dashboard', compact('overallAttendanceSummary', 'attendanceTrend',
-        'attendancePerMonth', 'perfectAttendance', 'absentAlot', 'recentAttendanceRecords',
+        'attendancePerMonth',  'absentAlot', 'recentAttendanceRecords',
                     'attendanceBySection', 'activeSchoolYear', 'schoolYears'));
     }
     public function backupDatabase()

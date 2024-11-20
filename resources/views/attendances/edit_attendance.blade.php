@@ -83,6 +83,10 @@
                     </table>
                 </form>
 
+                <div class="mt-3">
+                    <button type="button" id="clear-session-storage" class="btn btn-warning">Clear Selection</button>
+                </div>
+
                 <form action="{{ route('edit.attendance') }}" method="POST" id="save_changes">
                 @csrf
                 <input type="hidden" name="date" value="{{ request('date') }}">
@@ -102,9 +106,6 @@
                 </table>
                 <div class="mt-3" id="submit-button-container" style="display: none;">
                     <button type="submit" class="btn btn-success">Save Changes</button>
-                </div>
-                <div class="mt-3">
-                    <button type="button" id="clear-session-storage" class="btn btn-warning">Clear Selection</button>
                 </div>
             </form>
             @else

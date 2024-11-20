@@ -30,8 +30,8 @@ class AttendanceController extends Controller
         $attendances = Attendance::
         when($fromExcuse, function($q) {
             $q->where(function ($query) {
-                $query->whereIn('status_morning', ['excused', 'absent'])
-                      ->orWhereIn('status_lunch', ['excused', 'absent']);
+                $query->whereIn('status_morning', ['present','absent'])
+                      ->orWhereIn('status_lunch', ['present','absent']);
             });
         })
         ->when($setOfNames, function($q, $setOfNames){
@@ -121,7 +121,7 @@ class AttendanceController extends Controller
             ->with('student')
             ->paginate(30)
             ->appends($request->all());
-            return view('attendances.cancel_excuse_students', compact('attendances'));
+            return view('attendances.excuse_students', compact('attendances'));
 
         }
         $fatherlessChild = $this->getStudentsAttendance($name, $grade, $section,$startDate, $endDate);
@@ -167,9 +167,9 @@ class AttendanceController extends Controller
 
     public function attendances(Request $request){
 
-        $attendances = Attendance::where(function ($query) {
-            $query->whereIn('status_morning', ['excused', 'absent'])
-                  ->orWhereIn('status_lunch', ['excused', 'absent']);
+        $attendances = Attendance::latest()->where(function ($query) {
+            $query->whereIn('status_morning', ['present','absent'])
+                  ->orWhereIn('status_lunch', ['present','absent']);
         })
         ->whereHas('student', function ($q) {
             $activeSchoolYearId = SchoolYear::where('is_active', true)->value('id');
@@ -215,14 +215,8 @@ class AttendanceController extends Controller
 
         $records = Attendance::where('date', now()->format('Y-m-d'));
 
-        if($request->selected_date){
-
-            $records = Attendance::where('date', $request->unique_date)->first();
-            // ->update([
-            //     'status_morning' => 'present', 
-            //     'status_lunch' => 'present']);
-                dd($records);
-            return back()->with('success', 'Cancelled successfully');
+        if($request->from_review){
+            $records = Attendance::where('date', $request->from_review);
 
         }
 
@@ -231,7 +225,6 @@ class AttendanceController extends Controller
             $records->update(['status_morning' => 'present']);
         }
         elseif($request->cancel_lunch && !$request->cancel_morning){
-
             $records->where('status_morning', 'present')->update(['status_lunch' => 'present']);
         }
         else{
@@ -250,7 +243,7 @@ class AttendanceController extends Controller
 
 
         $startDate = now()->subDays(5)->format('Y-m-d');
-        $nowDate = now()->format('Y-m-d');
+        $nowDate = now()->subDays(1)->format('Y-m-d');
         
 
 
@@ -273,29 +266,32 @@ class AttendanceController extends Controller
 
     public function editAttendance(Request $request){
 
-        if($request->isMethod('post')){
-
-
-
+        if ($request->isMethod('post')) {
             $studentIds = [];
-            for($i = 0; $i < count($request->students); $i++){
-
+        
+            for ($i = 0; $i < count($request->students); $i++) {
                 Attendance::find($request->students[$i]['id'])
-                ->update(['status_morning' => $request->students[$i]['status_morning'],
-                            'status_lunch' => $request->students[$i]['status_lunch']]
-                    );
-
+                    ->update([
+                        'status_morning' => $request->students[$i]['status_morning'],
+                        'status_lunch' => $request->students[$i]['status_lunch'],
+                    ]);
+        
                 array_push($studentIds, $request->students[$i]['id']);
-            }   
+            }
+        
 
+            $previousIds = session('updated_attendance_ids', []);
+            $allIds = array_merge($previousIds, $studentIds);
 
+            session(['updated_attendance_ids' => $allIds]);
 
             Attendance::where('date', $request->date)
-            ->whereNotIn('id', $studentIds)
-            ->update(['status_morning' => 'present', 'status_lunch' => 'present']);
- 
-            return back()->with('success', 'Attendance record set to absent');
+                ->whereNotIn('id', $allIds)
+                ->update(['status_morning' => 'present', 'status_lunch' => 'present']);
+        
+            return back()->with('success', 'Attendance record updated successfully.');
         }
+        
 
         $name = $request->name;
 
@@ -329,7 +325,7 @@ class AttendanceController extends Controller
         })
         ->where('date', $request->date);
 
-        $queryAttendance = $attendances->paginate(30);
+        $queryAttendance = $attendances->limit(30)->get();
 
         return view('attendances.edit_attendance', compact('queryAttendance'));
 

@@ -36,8 +36,8 @@
                                     @if($attendance->status_morning !== 'present')
                                     <label>
                                         <input type="hidden" name="attendance[{{ $attendance->id }}][status_morning]" value="">
-                                        <input type="checkbox" name="attendance[{{ $attendance->id }}][status_morning]" value="excused" 
-                                        {{ $attendance->status_morning === 'excused' ? 'checked' : '' }}>
+                                        <input type="checkbox" name="attendance[{{ $attendance->id }}][status_morning]" value="absent" 
+                                        {{ $attendance->status_morning === 'present' ? 'checked' : '' }}>
                                         Excused (Morning)
                                     </label>
                                     @endif
@@ -46,8 +46,8 @@
                                     @if($attendance->status_lunch !== 'present')
                                     <label>
                                         <input type="hidden" name="attendance[{{ $attendance->id }}][status_lunch]" value="">
-                                        <input type="checkbox" name="attendance[{{ $attendance->id }}][status_lunch]" value="excused" 
-                                        {{ $attendance->status_lunch === 'excused' ? 'checked' : '' }}>
+                                        <input type="checkbox" name="attendance[{{ $attendance->id }}][status_lunch]" value="absent" 
+                                        {{ $attendance->status_lunch === 'present' ? 'checked' : '' }}>
                                         Excused (Lunch)
                                     </label>
                                     @endif

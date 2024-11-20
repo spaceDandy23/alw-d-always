@@ -44,7 +44,7 @@
                                                 <p>Choose which sessions to cancel attendance for:</p>
 
                                                     @csrf 
-                                                    <input type="hidden"  name="{{ $day->unique_dates }}" value="{{ $day->unique_dates }}">
+                                                    <input type="hidden"  name="from_review" value="{{ $day->unique_dates }}">
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" name="cancel_morning" value="1" id="cancel_morning">
                                                         <label class="form-check-label" for="cancel_morning">
@@ -68,14 +68,6 @@
                                     </div>
                                 </div>
                             </div>
-
-
-
-
-
-
-
-
 
 
                                 <form action="{{ route('edit.attendance') }}" method="GET">

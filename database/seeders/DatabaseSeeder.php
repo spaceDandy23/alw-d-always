@@ -21,8 +21,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            RfidLogSeeder::class,
-            AttendanceSeeder::class,
+
         ]);
     }
 }

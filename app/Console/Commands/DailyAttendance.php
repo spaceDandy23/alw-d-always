@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Holiday;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class DailyAttendance extends Command
@@ -38,20 +39,23 @@ class DailyAttendance extends Command
         }
 
         $holidays = Holiday::all();
-        foreach($holidays as $holiday){
+        foreach ($holidays as $holiday) {
 
-            $startDate = now()->setMonth($holiday->month)->setDay($holiday->day)->format('Y-m-d');
+            $startDate = Carbon::now()->setMonth($holiday->month)->setDay($holiday->day)->startOfDay();
+    
 
-            $endDate = !$holiday->end_month && !$holiday->end_day 
-            ? $startDate 
-            : now()->setMonth($holiday->end_month)->setDay($holiday->end_day)->format('Y-m-d');
+            $endDate = (!$holiday->end_month && !$holiday->end_day)
+                ? $startDate
+                : Carbon::now()->setMonth($holiday->end_month)->setDay($holiday->end_day)->endOfDay();
 
-            if ($todayDate >= $startDate && ($endDate === $startDate || $todayDate <= $endDate)) {
-                $this->info('no class');
-                return;
+            if (today()->between($startDate, $endDate)) {
+                
+                $this->info('No class');
+                return true; 
             }
-
         }
+    
+
 
 
         foreach (Student::where('school_year_id', $activeSchoolYear->id)->get() as $student) {

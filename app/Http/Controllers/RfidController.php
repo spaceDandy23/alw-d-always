@@ -15,6 +15,7 @@ use App\Models\Student;
 use App\Models\Tag;
 
 use Auth;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Session;
 
@@ -177,7 +178,7 @@ class RfidController extends Controller
                 if ($student) {
                     if (!$student->check_out) {
                         $student->update(['check_out' => now()->format('H:i:s')]);
-                        // $this->message($studentTag->id, 'student left');
+                        $this->message($studentTag->id, 'student left');
                     } else {
                         RfidLog::create([
                             'student_id' => $studentTag->id,
@@ -185,7 +186,7 @@ class RfidController extends Controller
                             'date' => $todayDate,
                             'tag_id' => $studentTag->tag->id
                         ]);
-                        // $this->message($studentTag->id, 'student went in');
+                        $this->message($studentTag->id, 'student went in');
                     }
                 } else {
                     RfidLog::create([
@@ -195,7 +196,7 @@ class RfidController extends Controller
                         'tag_id' => $studentTag->tag->id
                     ]);
                     
-                    // $this->message($studentTag->id, 'student went in');
+                    $this->message($studentTag->id, 'student went in');
                 }
 
 
@@ -342,18 +343,21 @@ class RfidController extends Controller
 
         
         $holidays = Holiday::all();
-        foreach($holidays as $holiday){
+        foreach ($holidays as $holiday) {
 
-            $startDate = now()->setMonth($holiday->month)->setDay($holiday->day)->format('Y-m-d');
+            $startDate = Carbon::now()->setMonth($holiday->month)->setDay($holiday->day)->startOfDay();
+    
 
-            $endDate = !$holiday->end_month && !$holiday->end_day 
-            ? $startDate 
-            : now()->setMonth($holiday->end_month)->setDay($holiday->end_day)->format('Y-m-d');
+            $endDate = (!$holiday->end_month && !$holiday->end_day)
+                ? $startDate
+                : Carbon::now()->setMonth($holiday->end_month)->setDay($holiday->end_day)->endOfDay();
 
-            if (today() >= $startDate && ($endDate === $startDate || today() <= $endDate)) {
-                return true;
+            if (today()->between($startDate, $endDate)) {
+                return true; 
             }
-
         }
+
+        return false;
+    
     }
 }
