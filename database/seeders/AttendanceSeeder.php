@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Attendance;
+use App\Models\Student;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -36,5 +38,14 @@ class AttendanceSeeder extends Seeder
                 ]);
             }
         }
+        $students = Student::all()->pluck('id')->toArray(); 
+        if (count($students) >= 2) { 
+            $randomStudents = array_rand($students, 2); 
+        
+            Attendance::whereIn('student_id', [$students[$randomStudents[0]], $students[$randomStudents[1]]])
+                ->whereBetween('date', ['2024-09-01', '2024-09-06'])
+                ->update(['status_morning' => 'absent', 'status_lunch' => 'absent']);
+        }
+        
     }
 }

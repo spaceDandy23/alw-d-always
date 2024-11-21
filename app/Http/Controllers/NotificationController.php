@@ -136,7 +136,8 @@ class NotificationController extends Controller
                 Notification::create([
                     'guardian_id' => $guardian->id, 
                     'student_id' => $student->id, 
-                    'message' => $request->message]);
+                    'message' => $request->message,
+                    'date' => today()]);
 
             }
         }

@@ -31,7 +31,7 @@ class InsertAttendanceSeeder extends Seeder
                 [
                     'student_id' => $studentId,
                     'date' => $yesterday,
-                    'status_morning' => 'absent',
+                    'status_morning' => 'present',
                     'status_lunch' => 'absent',
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),

@@ -31,8 +31,8 @@ class AdminController extends Controller
         $totalDaysRecorded = Attendance::whereHas('student', function($query) use ($activeSchoolYear) {
             return $query->where('school_year_id', $activeSchoolYear->id);
         })
-        ->count();
-
+        ->distinct('date') 
+        ->count('date'); 
 
         $overallAverageAttendanceRate = Attendance::
         whereHas('student', function($query) use ($activeSchoolYear){

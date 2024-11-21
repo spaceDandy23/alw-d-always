@@ -318,11 +318,16 @@ class TeacherController extends Controller
             $attendanceSection->where('date', '<=', $endDate);
         }
         
+        
 
         $attendanceSection->when($present, function($q, $present) {
             return $q->where('present', $present);
 
         });
+
+        if($present === '0'){
+            $attendanceSection->where('present', $present);
+        }
 
         if ($startTime && $endTime) {
             $attendanceSection->where('time', '>=', $startTime)

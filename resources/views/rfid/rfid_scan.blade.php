@@ -121,12 +121,17 @@
             })
             .then((data) => {
                 if(data.success){
+                    document.getElementById('rfid_field').value='';
+
+                    document.getElementById('rfid_field').focus();
+                    
                     console.log(data);
                     console.log(data.message);
                     showStudentVerified(data);
                     
                     if(data.from_teacher){
 
+   
                         let sessionStudents = JSON.parse(sessionStorage.getItem('{{ Auth::user()->id }}')) || {};
                         if (!sessionStudents[data.student.id]) {
                             sessionStudents[data.student.id] = data.student;
@@ -141,6 +146,9 @@
                     }
                 }
                 else{
+                    document.getElementById('rfid_field').value='';
+
+                    document.getElementById('rfid_field').focus();
                      console.log(data.message);
                 }
 

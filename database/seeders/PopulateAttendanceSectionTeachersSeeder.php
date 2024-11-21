@@ -31,7 +31,7 @@ class PopulateAttendanceSectionTeachersSeeder extends Seeder
                 DB::table('attendance_section_teachers')->insert([
                     'student_id' => $student->student_id,
                     'teacher_id' => 5,
-                    'section_id' => 79, 
+                    'section_id' => 113, 
                     'date' => $date->toDateString(),
                     'present' => 1,  
                     'time' => $date->toTimeString(),

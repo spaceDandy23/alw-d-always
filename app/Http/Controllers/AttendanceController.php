@@ -30,8 +30,8 @@ class AttendanceController extends Controller
         $attendances = Attendance::
         when($fromExcuse, function($q) {
             $q->where(function ($query) {
-                $query->whereIn('status_morning', ['present','absent'])
-                      ->orWhereIn('status_lunch', ['present','absent']);
+                $query->whereIn('status_morning', ['absent'])
+                      ->orWhereIn('status_lunch', ['absent']);
             });
         })
         ->when($setOfNames, function($q, $setOfNames){
@@ -168,8 +168,8 @@ class AttendanceController extends Controller
     public function attendances(Request $request){
 
         $attendances = Attendance::latest()->where(function ($query) {
-            $query->whereIn('status_morning', ['present','absent'])
-                  ->orWhereIn('status_lunch', ['present','absent']);
+            $query->whereIn('status_morning', ['absent'])
+                  ->orWhereIn('status_lunch', ['absent']);
         })
         ->whereHas('student', function ($q) {
             $activeSchoolYearId = SchoolYear::where('is_active', true)->value('id');
@@ -217,9 +217,13 @@ class AttendanceController extends Controller
 
         if($request->from_review){
             $records = Attendance::where('date', $request->from_review);
-
         }
 
+        if($request->from_review && !$request->cancel_morning && !$request->cancel_lunch){
+
+
+            return back()->with('error', 'Please check at least one checkbox');
+        }
 
         if(!$request->cancel_lunch){
             $records->update(['status_morning' => 'present']);
@@ -256,7 +260,7 @@ class AttendanceController extends Controller
                     '))
         ->groupBy('unique_dates')
         ->having('total_lunch_absent', '>=', 90)
-        ->Orhaving('total_morning_absent', '>=', 90)
+        ->orHaving('total_morning_absent', '>=', 90)
         ->get();
         // dd($fullDay->toArray(), $startDate, $nowDate);
 

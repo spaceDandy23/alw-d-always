@@ -229,7 +229,7 @@ class StudentController extends Controller
                 $guardian = Guardian::firstOrCreate(
                     [
                         'name' => $data['guardian name'],
-                        'contact_info' => $data['phone number'],
+                        'contact_info' => '0'.$data['phone number'],
                     ],
                     [
                         'created_at' => now(),
