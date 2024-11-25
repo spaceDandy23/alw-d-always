@@ -14,7 +14,12 @@
                 </div>
             </form>
         </div>
+        <div>
 
+  
+   
+
+        </div>
         @if(isset($attendances))
         <!-- Summary Table -->
         <div class="card mb-4">
@@ -70,6 +75,9 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+        <div>
+            <a href="{{ route('export.report', request()->except('page')) }}" class="btn btn-primary">Export To PDF</a>
         </div>
         <div class="d-flex justify-content-center">
             {{ $attendances->links('vendor.pagination.bootstrap-5') }}

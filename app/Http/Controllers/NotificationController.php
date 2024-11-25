@@ -6,6 +6,7 @@ use App\Models\Guardian;
 use App\Models\Notification;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use Cache;
 use Illuminate\Http\Request;
 
 
@@ -143,5 +144,20 @@ class NotificationController extends Controller
         }
 
         return back()->with('success', 'Parents messaged successfully');
+    }
+
+
+    public function editMessage(Request $request){
+
+        $messages = [];
+
+
+        $messages['firstMessage'] = $request->first_message;
+        $messages['secondMessage'] = $request->second_message;
+
+
+        Cache::put('messages', $messages);
+
+        return redirect()->route('dashboard')->with('success', 'Message changed successfully');
     }
 }

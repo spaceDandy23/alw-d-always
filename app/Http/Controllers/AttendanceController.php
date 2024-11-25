@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
-use App\Models\AttendanceSectionTeacher;
 use App\Models\SchoolYear;
-use App\Models\Student;
 use Auth;
-use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 use DB;
 use Illuminate\Http\Request;
-use Session;
+;
 
 class AttendanceController extends Controller
 {
@@ -245,9 +243,9 @@ class AttendanceController extends Controller
 
 
 
-
-        $startDate = now()->subDays(5)->format('Y-m-d');
         $nowDate = now()->subDays(1)->format('Y-m-d');
+        $startDate = now()->subDays(6)->format('Y-m-d');
+
         
 
 
@@ -259,8 +257,8 @@ class AttendanceController extends Controller
                     
                     '))
         ->groupBy('unique_dates')
-        ->having('total_lunch_absent', '>=', 90)
-        ->orHaving('total_morning_absent', '>=', 90)
+        // ->having('total_lunch_absent', '>=', 90)
+        // ->orHaving('total_morning_absent', '>=', 90)
         ->get();
         // dd($fullDay->toArray(), $startDate, $nowDate);
 
@@ -335,5 +333,28 @@ class AttendanceController extends Controller
 
     }
 
+    public function exportReport(Request $request)
+    {
+
+        $name = $request->input('name');
+        $grade = $request->input('grade');
+        $section = $request->input('section');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $fromExcuse = $request->input('from_excuse');
+        $attendances = $this->getStudentsAttendance($name, $grade, $section, $startDate, $endDate, $fromExcuse)->get();
+        $pdf = Pdf::loadView('attendances.export_pdf', compact('attendances', 'startDate', 'endDate'));
+        return $pdf->download('attendance_report.pdf');
+    }
+
+
+    public function setDay(Request $request)
+    
+    {
+        Attendance::where('date', $request->date)->delete();
+
+        return back()->with('success', 'Date set to holiday');
+    }
+    
  
 }

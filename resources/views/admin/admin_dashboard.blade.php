@@ -11,6 +11,71 @@
     <button type="button" class="btn btn-warning mb-4" data-bs-toggle="modal" data-bs-target="#cancelAttendanceModal">
         Cancel Attendance For Today
     </button>
+    <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#changeMessage">
+        Change SMS Message
+    </button>
+    <button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#restoreDatabase">
+        Restore Database
+    </button>
+    <div class="modal fade" id="restoreDatabase" tabindex="-1" aria-labelledby="restoreDatabaseLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="restoreDatabaseLabel">Choose database to restore</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('restore.database') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Important Warning!</strong><br>
+                            Restoring a database will log you out
+                        </div>
+                        <select name="sql_file" class="form-select">
+                            <option value=""> Choose Backed Up Database</option>
+                            @foreach ($cleanedSqlNames as $fileName)
+                                <option value="{{ $fileName }}">
+                                    {{ $fileName }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Restore</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="changeMessage" tabindex="-1" aria-labelledby="changeMessageLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changeMessageLabel">Change</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('change.message') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <label for="first_period" class="form-label">Check in message</label>
+                        <textarea class="form-control" id="first_period" name="first_message" rows="3">{{ $messages['firstMessage'] }}</textarea>
+                        <label for="second_period" class="form-label">Check out message</label>
+                        <textarea class="form-control" id="second_period" name="second_message" rows="3">{{ $messages['secondMessage'] }}</textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Change</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
     <div class="modal fade" id="cancelAttendanceModal" tabindex="-1" aria-labelledby="cancelAttendanceModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -90,8 +155,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning" role="alert">
-                        <strong>Important Warning!</strong><br>
-                        If you need to import this backup later or sooner, please contact the developers for assistance.
+                        Are you sure you want to backup database
                     </div>
                     <form id="schoolYearForm" action="{{ route('back.up') }}" method="POST">
                         @csrf

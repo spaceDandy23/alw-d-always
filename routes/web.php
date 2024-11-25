@@ -23,6 +23,7 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('dashboard');
 
         Route::post('/undo/{id}', [AdminController::class, 'undoImport'])->name('import.undo');
+        Route::post('restore', [AdminController::class, 'restoreDatabase'])->name('restore.database');
         
         Route::get('logs/filter', [RfidController::class, 'search'])->name('logs.filter');
         Route::get('logs', [RfidController::class, 'index'])->name('logs.index');
@@ -33,7 +34,7 @@ Route::middleware('prevent.back')->group(function () {
 
         Route::post('message/parents', [NotificationController::class,'massMessage'])->name('mass.message.parent');
         Route::post('message/parent/{student}', [NotificationController::class, 'messageParent'])->name('message.parent');
-
+        Route::post('message/edit', [NotificationController::class, 'editMessage'])->name('change.message');
         Route::match(['post', 'get'],'review/edit', [AttendanceController::class, 'editAttendance'])->name('edit.attendance');
         Route::resource('users', UserController::class);
         
@@ -73,11 +74,14 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('logs', [RfidController::class, 'index'])->name('logs.index');
 
         Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.reports.filter');
+        Route::get('attendances/filter/export', [AttendanceController::class, 'exportReport'])->name('export.report');
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');
+        Route::post('set', [AttendanceController::class, 'setDay'])->name('set.day');
         Route::post('mark', [TeacherController::class, 'markAttendance'])->name('mark.attendance');
         Route::get('dashboard', [TeacherController::class, 'index'])->name('teacher.dashboard');
         Route::get('class/attendance', [TeacherController::class, 'classAttendance'])->name('class.attendance.index');
         Route::get('class/attendance/filter', [TeacherController::class, 'search'])->name('class.filter');
+        
         Route::get('class', [TeacherController::class, 'classIndex'])->name('class.index');
         Route::put('class/{student}', [TeacherController::class,'updateClassAttendance'])->name('class.attendance.update');
         Route::post('class/store', [TeacherController::class, 'storeClass'])->name('create.class');

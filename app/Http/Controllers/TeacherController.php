@@ -240,12 +240,8 @@ class TeacherController extends Controller
     public function classAttendance(){
 
         $attendanceSection = AttendanceSectionTeacher::where('teacher_id', Auth::id())
-        ->whereHas('student', function($q){
-
-            return $q->where('school_year_id', SchoolYear::latest()->first()->id ?? '');
-        })
         ->with('section','student')
-        ->paginate();
+        ->paginate(30);
         return view('teachers.class_attendance', compact('attendanceSection'));
 
 
@@ -297,7 +293,7 @@ class TeacherController extends Controller
                         $name = trim($name);
                         $q->where('name', 'LIKE', "%{$name}%");
                     }
-                        $q->where('school_year_id', SchoolYear::latest()->first()->id ?? '');
+
                         
 
                 });

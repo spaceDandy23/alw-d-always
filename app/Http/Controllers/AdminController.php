@@ -8,8 +8,10 @@ use App\Models\ImportBatch;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Student;
+use Cache;
 use Carbon\Carbon;
 use DB;
+use Exception;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -20,7 +22,23 @@ class AdminController extends Controller
 
         $activeSchoolYear = SchoolYear::where('is_active', true)->first();
 
+        $messages = Cache::get('messages', []);
+
+        $sqlNames = scandir(storage_path('app/backups'));
+
+        $cleanedSqlNames = array_diff($sqlNames, ['.', '..']);
+
+
+        if(!$messages){
+            //set default message if empty yung messages
+            $messages['firstMessage'] = 'student went in';
+            $messages['secondMessage'] = 'student went out';
+            Cache::put('messages', $messages);
+
+        }
+
         
+        // dd(Cache::get('messages')['firstMessage'] . ' ' . now());
 
         if(!$activeSchoolYear){
             return view('admin.admin_dashboard', compact('activeSchoolYear'));
@@ -140,7 +158,7 @@ class AdminController extends Controller
         
         return view('admin.admin_dashboard', compact('overallAttendanceSummary', 'attendanceTrend',
         'attendancePerMonth',  'absentAlot', 'recentAttendanceRecords',
-                    'attendanceBySection', 'activeSchoolYear', 'schoolYears'));
+                    'attendanceBySection', 'activeSchoolYear', 'schoolYears','messages', 'cleanedSqlNames'));
     }
     public function backupDatabase()
     {
@@ -199,6 +217,45 @@ class AdminController extends Controller
 
 
     return redirect()->route('students.index')->with('success', 'Import undone successfully');
+    }
+
+
+    public function restoreDatabase(Request $request){
+
+
+        $request->validate([
+
+            'sql_file' => 'required|string'
+        ]);
+
+
+        $filePath = storage_path("app/backups/{$request->sql_file}");
+
+        try{
+
+
+            DB::beginTransaction();
+
+
+            $sql = file_get_contents($filePath);
+
+            DB::unprepared($sql);
+            DB::commit();
+
+            return back()->with('success', 'Database successfully imported');
+
+
+        }
+
+        catch(Exception $e){
+
+
+            DB::rollBack();
+
+            return back()->with('error', 'Database importing failed'. " {$e->getMessage()}");
+        }
+
+
     }
 
 }

@@ -15,6 +15,7 @@ use App\Models\Student;
 use App\Models\Tag;
 
 use Auth;
+use Cache;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Session;
@@ -132,6 +133,8 @@ class RfidController extends Controller
 
         if($request->isMethod('post')){
 
+            $now = now();
+
             if($this->checkHoliday()){
 
                 return response()->json(['success' => false, 'message' => 'no class']);
@@ -178,7 +181,7 @@ class RfidController extends Controller
                 if ($student) {
                     if (!$student->check_out) {
                         $student->update(['check_out' => now()->format('H:i:s')]);
-                        $this->message($studentTag->id, 'student left');
+                        $this->message($studentTag->id, Cache::get('messages')['secondMessage'] . ' ' . now());
                     } else {
                         RfidLog::create([
                             'student_id' => $studentTag->id,
@@ -186,7 +189,7 @@ class RfidController extends Controller
                             'date' => $todayDate,
                             'tag_id' => $studentTag->tag->id
                         ]);
-                        $this->message($studentTag->id, 'student went in');
+                        $this->message($studentTag->id, Cache::get('messages')['firstMessage'] . ' ' . now());
                     }
                 } else {
                     RfidLog::create([
@@ -196,7 +199,7 @@ class RfidController extends Controller
                         'tag_id' => $studentTag->tag->id
                     ]);
                     
-                    $this->message($studentTag->id, 'student went in');
+                    $this->message($studentTag->id, Cache::get('messages')['firstMessage'] . ' ' . now());
                 }
 
 
