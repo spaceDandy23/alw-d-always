@@ -6,13 +6,45 @@
     <h2>Dashboard</h2>
     <h3>School Year: {{ $activeSchoolYear->year }}</h3>
     
+    <button type="button" class="btn btn-secondary mb-4" data-bs-toggle="modal" data-bs-target="#changeSchoolYearModal">
+        Change School Year
+    </button>
+
+    <div class="modal fade" id="changeSchoolYearModal" tabindex="-1" aria-labelledby="changeSchoolYearModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changeSchoolYearModalLabel">Change School Year</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="changeSchoolYearForm" action="{{ route('change.school.year') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="new_school_year" class="form-label">Select New School Year</label>
+                            <select class="form-select" id="new_school_year" name="new_school_year" required>
+                                <option selected disabled>Choose School Year</option>
+                                @foreach ($schoolYears as $year)
+                                    <option value="{{ $year->id }}">{{ $year->year }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" form="changeSchoolYearForm" class="btn btn-primary">Change</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="card mb-4 shadow-lg border-0">
         <div class="card-body bg-light">
             <h5 class="card-title text-center fw-bold text-uppercase text-primary">Overall Attendance Summary</h5>
             <div class="row">
                 <div class="col-md-6">
                     <p>School Year: <span id="school_year">{{ $activeSchoolYear->year ?? 'N/A' }}</span></p>
-                    <p>Total Students in your class: <span id="total-students">{{ $totalStudents }}</span></p>
+                    <p>Total Students in your classes: <span id="total-students">{{ $totalStudents }}</span></p>
                 </div>
                 <div class="col-md-6">
                     <p>Total Days Recorded: <span id="total-days">{{ $totalDaysRecorded }}</span></p>

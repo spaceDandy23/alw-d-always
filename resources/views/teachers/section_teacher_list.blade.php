@@ -197,7 +197,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            Are you sure you want to remove this class? This action cannot be undone.
+                            Are you sure you want to remove this class? This action cannot be undone and deletion will lead to data loss of recorded attendance throughout the section.
                         </div>
                         <div class="modal-footer">
                             <form action="{{ route('class.delete') }}" method="POST">

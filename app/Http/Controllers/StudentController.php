@@ -11,7 +11,9 @@ use App\Models\Student;
 use App\Models\Tag;
 
 use App\Models\TagHistory;
+use Auth;
 use Illuminate\Http\Request;
+use Session;
 use Storage;
 use Illuminate\Support\Facades\DB;
 
@@ -70,10 +72,11 @@ class StudentController extends Controller
         return view('students.register_student', compact('relationships'));
 
     }
-    public function searchQuery($name, $grade, $section){
+    public function searchQuery($name, $grade, $section, $schoolYear){
         $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
         $setOfNames = explode(' ', $sanitizedName);
-        $schoolYear = SchoolYear::where('is_active', true)->first()->id ?? '';
+
+ 
         return Student::
         when($setOfNames, function($q, $setOfNames){
             foreach($setOfNames as $name){
@@ -94,7 +97,7 @@ class StudentController extends Controller
             });
 
         })
-        ->where('school_year_id',  $schoolYear);
+        ->where('school_year_id',  $schoolYear->id);
 
 
 
@@ -103,15 +106,16 @@ class StudentController extends Controller
     public function search(Request $request){
 
 
-
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
         if($request->input('fromRegister')){
             $name = $request->input('name');
             $grade = $request->input('grade');
             $section = $request->input('section');
 
 
-        
-            $studentQuery = $this->searchQuery($name, $grade, $section)->where('tag_id', '=', NULL)
+           
+            $studentQuery = $this->searchQuery($name, $grade, $section, $activeSchoolYear)
+            ->where('tag_id', '=', NULL)
             ->with('section')
             ->paginate(10);
            
@@ -140,11 +144,13 @@ class StudentController extends Controller
             ];
             
 
-            $students = $this->searchQuery($name, $grade, $section)->paginate(10);
+            $students = $this->searchQuery($name, $grade, $section, $activeSchoolYear)->paginate(10);
             $students->appends($request->all());
             $sections = Section::all();
+            $importBatches = ImportBatch::all();
 
-            return view('students.students_list', compact('students', 'relationships','sections'));
+
+            return view('students.students_list', compact('students', 'relationships','sections','activeSchoolYear', 'importBatches'));
 
         }
 
@@ -190,7 +196,7 @@ class StudentController extends Controller
 
 
         $header = fgetcsv($csvFile);
-        $expectedHeader = ['last name', 'first name', 'middle name', 'grade', 'section','guardian name', 'relationship to student', 'phone number'];
+        $expectedHeader = ['student name', 'grade', 'section','guardian name', 'relationship to student', 'phone number'];
 
 
         for ($i = 0; $i < count($expectedHeader); $i++) {
@@ -215,7 +221,7 @@ class StudentController extends Controller
 
                 $student = Student::firstOrCreate(
                     [
-                        'name' => "{$data['last name']}, {$data['first name']} {$data['middle name']}",
+                        'name' => "{$data['student name']}",
                         'school_year_id' => $schoolYearRecord->id,
                         'section_id' => $section->id,
                     ],
@@ -271,7 +277,7 @@ class StudentController extends Controller
 
     }
     public function filterStudentAttendance(Request $request, Student $student){
-
+        //for the teacher
         $request->validate([
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -339,8 +345,18 @@ class StudentController extends Controller
      */
     public function index()
     {
-        $students = Student::with('guardians')->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '')
-        ->paginate(11);
+
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
+
+        $students = Student::with('guardians')
+        ->when($activeSchoolYear, function($q, $activeSchoolYear) {
+            
+            
+            return $q->where('school_year_id', $activeSchoolYear->id);
+
+        });
+
+        $students = $students->paginate(11);
         $sections = Section::all();
         $relationships = [
             'Mother',
@@ -352,7 +368,6 @@ class StudentController extends Controller
             'Other'
         ];
 
-        $activeSchoolYear = SchoolYear::where('is_active', true)->first();
         $importBatches = ImportBatch::all();
         return view('students.students_list', compact('students',  'relationships', 'sections', 'importBatches', 'activeSchoolYear'));
 

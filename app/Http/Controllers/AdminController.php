@@ -8,22 +8,52 @@ use App\Models\ImportBatch;
 use App\Models\SchoolYear;
 use App\Models\Section;
 use App\Models\Student;
+use Auth;
 use Cache;
 use Carbon\Carbon;
 use DB;
 use Exception;
 use Illuminate\Http\Request;
+use Session;
 
 class AdminController extends Controller
 {
     public function index(){
         
-
+        $activeUser =  Auth::id();
+        // dd($activeUser);
 
         $activeSchoolYear = SchoolYear::where('is_active', true)->first();
 
-        $messages = Cache::get('messages', []);
 
+        if(Session::get(Auth::id())){
+
+            $activeSchoolYear = Session::get($activeUser);
+
+            
+
+        }
+
+
+        // dd($activeSchoolYear->toArray());
+
+
+
+
+
+
+
+        
+
+        if(!$activeSchoolYear){
+            return view('admin.admin_dashboard', compact('activeSchoolYear'));
+        }
+
+
+
+
+        $messages = Cache::get('messages', []);
+        // dd($messages);
         $sqlNames = scandir(storage_path('app/backups'));
 
         $cleanedSqlNames = array_diff($sqlNames, ['.', '..']);
@@ -40,9 +70,13 @@ class AdminController extends Controller
         
         // dd(Cache::get('messages')['firstMessage'] . ' ' . now());
 
-        if(!$activeSchoolYear){
-            return view('admin.admin_dashboard', compact('activeSchoolYear'));
-        }
+
+
+
+
+
+
+
         $totalStudents = Student::where('school_year_id', $activeSchoolYear->id )
         ->count();
 
@@ -190,10 +224,11 @@ class AdminController extends Controller
         ]);
 
 
-        SchoolYear::where('is_active', true)->update(['is_active' => false]);
+        // SchoolYear::where('is_active', true)->update(['is_active' => false]);
 
-        SchoolYear::find($request->input('new_school_year'))->update(['is_active' => true]);
-
+        // SchoolYear::find($request->input('new_school_year'))->update(['is_active' => true]);
+        Session::put(Auth::id(), SchoolYear::find($request->new_school_year));
+        // dd(Session::get(Auth::id())->toArray());
 
         
         return redirect()->route('dashboard')->with('success', 'School Year changed successfully');
@@ -214,7 +249,7 @@ class AdminController extends Controller
     if($schoolYear){
         $schoolYear->update(['is_active' => true]);
     }
-
+    Session::remove(Auth::id());
 
     return redirect()->route('students.index')->with('success', 'Import undone successfully');
     }

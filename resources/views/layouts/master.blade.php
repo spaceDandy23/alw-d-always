@@ -41,9 +41,17 @@
     @if(Auth::check())
     <nav class="sidebar">
         @if(Auth::user()->isAdmin())
-        <h3 class="mb-4"> {{ SchoolYear::where('is_active', true)->first()->year ?? 'No school year'}}</h3>
+            @if(Session::get(Auth::id()))
+                <h3 class="mb-4"> {{ Session::get(Auth::id())->year}}</h3>
+            @else
+            <h3 class="mb-4"> {{ SchoolYear::where('is_active', true)->first()->year ?? 'No school year'}}</h3>
+            @endif
         @else
-        <h3 class="mb-4"> {{ SchoolYear::latest()->first()->year ?? 'No school year'}}</h3>
+        @if(Session::get(Auth::id()))
+                <h3 class="mb-4"> {{ Session::get(Auth::id())->year}}</h3>
+            @else
+            <h3 class="mb-4"> {{ SchoolYear::where('is_active', true)->first()->year ?? 'No school year'}}</h3>
+            @endif
         @endif
         
         @if(Auth::user()->isAdmin())

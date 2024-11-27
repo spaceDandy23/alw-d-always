@@ -19,16 +19,19 @@ class TeacherController extends Controller
     public function index()
     {
 
-        $activeSchoolYear = SchoolYear::latest()->first() ?? '';
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
     
 
-        $activeSchoolYearId = $activeSchoolYear ? $activeSchoolYear->id : null;
     
 
         $attendanceTrends = AttendanceSectionTeacher::where('teacher_id', Auth::id())
             ->join('sections', 'attendance_section_teachers.section_id', '=', 'sections.id')
             ->join('students', 'attendance_section_teachers.student_id', '=', 'students.id')  
-            ->where('students.school_year_id', $activeSchoolYearId)  
+
+            ->when($activeSchoolYear, function ($q, $activeSchoolYear){
+
+                return $q->where('students.school_year_id', $activeSchoolYear->id);  
+            })
             ->selectRaw(
                 "CONCAT('Grade ', sections.grade, ' - ', sections.section) as section_label, 
                 DATE_FORMAT(date, '%Y-%m') as month, 
@@ -45,7 +48,9 @@ class TeacherController extends Controller
             ->select('students.id', 'students.name', 'attendance_section_teachers.section_id', DB::raw('COUNT(*) as total_absent'))
             ->where('attendance_section_teachers.teacher_id', Auth::id())  
             ->where('attendance_section_teachers.present', 0)
-            ->where('students.school_year_id', $activeSchoolYearId) 
+            ->when($activeSchoolYear, function ($q, $activeSchoolYear){
+                return $q->where('students.school_year_id', $activeSchoolYear->id);  
+            })
             ->groupBy('students.id', 'attendance_section_teachers.section_id', 'students.name')
             ->havingRaw('COUNT(*) >= 3')
             ->get();
@@ -54,7 +59,10 @@ class TeacherController extends Controller
         $overallAverageAttendancePercentage = AttendanceSectionTeacher::where('teacher_id', Auth::id())
             ->join('sections', 'attendance_section_teachers.section_id', '=', 'sections.id')
             ->join('students', 'attendance_section_teachers.student_id', '=', 'students.id')  
-            ->where('students.school_year_id', $activeSchoolYearId)  
+            ->when($activeSchoolYear, function ($q, $activeSchoolYear){
+
+                return $q->where('students.school_year_id', $activeSchoolYear->id);  
+            }) 
             ->selectRaw(
                 "CONCAT('Grade ', sections.grade, ' - ', sections.section) as section_label, 
                 attendance_section_teachers.section_id as section_id, 
@@ -66,7 +74,10 @@ class TeacherController extends Controller
 
 
         $totalStudents = Auth::user()->students()
-            ->where('school_year_id', $activeSchoolYearId) 
+            ->when($activeSchoolYear, function ($q, $activeSchoolYear){
+
+                return $q->where('school_year_id', $activeSchoolYear->id);  
+            })
             ->count();
 
         $totalDaysRecorded = $attendanceTrends->flatMap(function ($sectionData) {
@@ -80,11 +91,13 @@ class TeacherController extends Controller
         })->sum();
     
         $attendanceRate = Auth::user()->sectionAttendances()
-        ->whereHas('student', function ($query) use ($activeSchoolYearId) {
-            $query->where('school_year_id', $activeSchoolYearId);
+        ->whereHas('student', function ($query) use ($activeSchoolYear) {
+            $query->when($activeSchoolYear, function($q, $activeSchoolYear){
+                return $q->where('school_year_id', $activeSchoolYear->id);
+            });
         })
         ->avg('present') * 100;
-
+        $schoolYears = SchoolYear::all();
 
 
         return view('teachers.teacher_dashboard', compact(
@@ -94,17 +107,20 @@ class TeacherController extends Controller
             'totalStudents',
             'totalDaysRecorded',
             'attendanceRate',
-            'absentAlot'
+            'absentAlot',
+            'schoolYears'
         ));
     }
     
     
     public function classIndex(){
 
-        $activeSchoolYearId = SchoolYear::latest()->first()->id;
+        $activeSchoolYear = SchoolYear::where('is_active', true)->first();
 
         $studentsAuth = Auth::user()->students()
-            ->where('school_year_id', $activeSchoolYearId) 
+            ->when($activeSchoolYear, function($q, $activeSchoolYear){
+                return $q->where('school_year_id', $activeSchoolYear->id);
+            })
             ->with(['attendances' => function($query) {
                 $query->where('date', today());
             }])
@@ -125,18 +141,23 @@ class TeacherController extends Controller
     public function storeClass(Request $request){
         $sections = $request->input('sections', []);
 
-        $activeSchoolYear = SchoolYear::latest()->first() ?? '';
+        $activeSchoolYear = SchoolYear::where('is_active', true)->first();
 
-        $activeSchoolYearId = $activeSchoolYear ? $activeSchoolYear->id : null;
+
 
         if(!$sections){
             return back()->with('error', 'Please fill out at least one checkbox');
         }
 
-        $student = Student::whereIn('section_id', $sections)->where('school_year_id',  $activeSchoolYearId)->get()->pluck('id');
+        $students = Student::whereIn('section_id', $sections)
+        ->when($activeSchoolYear, function($q, $activeSchoolYear){
+            return $q->where('school_year_id', $activeSchoolYear->id);
+        })
+        ->get()
+        ->pluck('id');
 
 
-        Auth::user()->students()->syncWithoutDetaching($student);   
+        Auth::user()->students()->syncWithoutDetaching($students);   
         return redirect()->route('class.index')->with('success','Section added successfully');
 
 
@@ -238,8 +259,18 @@ class TeacherController extends Controller
         
     }
     public function classAttendance(){
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
 
-        $attendanceSection = AttendanceSectionTeacher::where('teacher_id', Auth::id())
+        $attendanceSection = AttendanceSectionTeacher::whereHas('student', function($q) use ($activeSchoolYear){
+
+            return $q->when($activeSchoolYear, function($q, $activeSchoolYear){
+
+                return $q->where('school_year_id', $activeSchoolYear->id);
+            });
+
+        })
+        
+        ->where('teacher_id', Auth::id())
         ->with('section','student')
         ->paginate(30);
         return view('teachers.class_attendance', compact('attendanceSection'));
@@ -249,7 +280,7 @@ class TeacherController extends Controller
     }
     public function search(Request $request){
 
-
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
         $request->validate([        
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -287,7 +318,15 @@ class TeacherController extends Controller
         })
         ->pluck('id');
 
-        $attendanceSection = AttendanceSectionTeacher::when($setOfNames, function($q) use($setOfNames){
+        $attendanceSection = AttendanceSectionTeacher::whereHas('student', function($q) use ($activeSchoolYear){
+
+            return $q->when($activeSchoolYear, function($q, $activeSchoolYear){
+
+                return $q->where('school_year_id', $activeSchoolYear->id);
+            });
+
+        })
+        ->when($setOfNames, function($q) use($setOfNames){
             return $q->whereHas('student', function($q)use($setOfNames){
                     foreach ($setOfNames as $name) {
                         $name = trim($name);

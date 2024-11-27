@@ -52,7 +52,6 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('student/{student}/filter', [StudentController::class,'filterStudentAttendance'])->name('student.filter');
         Route::post('archive', [AdminController::class, 'backupDatabase'])->name('back.up');
 
-        Route::post('change', [AdminController::class, 'changeSchoolYear'])->name('change.school.year');
 
 
         Route::get('guardians/filter', [GuardianController::class, 'search'])->name('guardians.filter');
@@ -73,6 +72,7 @@ Route::middleware('prevent.back')->group(function () {
         Route::get('logs/filter', [RfidController::class, 'search'])->name('logs.filter');
         Route::get('logs', [RfidController::class, 'index'])->name('logs.index');
 
+        Route::post('change', [AdminController::class, 'changeSchoolYear'])->name('change.school.year');
         Route::get('attendances/filter', [AttendanceController::class, 'search'])->name('attendances.reports.filter');
         Route::get('attendances/filter/export', [AttendanceController::class, 'exportReport'])->name('export.report');
         Route::get('attendances', [AttendanceController::class, 'index'])->name('attendances.index');

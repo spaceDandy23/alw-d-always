@@ -27,15 +27,16 @@ class RfidController extends Controller
 {
     public function index(){
 
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
+
 
         $rfidLogs = RfidLog::latest('date')
-        ->whereHas('student', function($q){
+        ->whereHas('student', function($q) use($activeSchoolYear){
 
-            if(Auth::user()->isAdmin()){
-                return $q->where('students.school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
-    
-            }
-            return $q->where('students.school_year_id', SchoolYear::latest()->first()->id ?? '');
+            return $q->when($activeSchoolYear, function($q, $activeSchoolYear){
+                return $q->where('school_year_id', $activeSchoolYear->id);
+
+            });
     
             
     
@@ -50,7 +51,7 @@ class RfidController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
             ]);
 
-
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
 
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
@@ -99,29 +100,15 @@ class RfidController extends Controller
             return $q->whereHas('tag', function($q) use($rfidTag){
                 $q->where('rfid_tag', $rfidTag);
             });
-        });
+        })
+        ->whereHas('student', function($q) use ($activeSchoolYear){
+                $q->when($activeSchoolYear, function($q, $activeSchoolYear) {
+                    return $q->where('school_year_id', $activeSchoolYear->id);
 
-        
-        if(Auth::user()->isAdmin()){
-            $rfidLogs->whereHas('student', function($q){
-                $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
-
-            });
-
-        }
-        elseif(Auth::user()->isTeacher()){
-            $rfidLogs->whereHas('student', function($q){
-                $q->where('school_year_id', SchoolYear::latest()->first()->id ?? '');
-
-            });
-
-
-        }
-
-
-        $rfidLogs = $rfidLogs
-                    ->paginate(30)
-                    ->appends($request->all());
+                });
+            })
+        ->paginate(30)
+        ->appends($request->all());
 
 
         return view('rfid.rfid_logs', compact('rfidLogs'));
@@ -147,18 +134,22 @@ class RfidController extends Controller
             $currentHour = now()->format('H');
             // if ($currentHour <= 17 && $currentHour > 6) {
                 if(true){
-                $activeSchoolYear = SchoolYear::latest()->first();
+                $activeSchoolYear = SchoolYear::where('is_active', true)->first();
                 
                 
-                $tag = Tag::where('rfid_tag', $request->rfid_tag)->first();
+                $tag = Tag::where('rfid_tag', $request->rfid_tag)->latest()->first();
                 if(!$tag){
                     return response()->json([
                         'success' => false,
                         'message' => 'RFID tag is not registered',
                     ]);
                 }
+
+
                 $studentTag = Student::where('tag_id', $tag->id)
-                ->where('school_year_id', $activeSchoolYear->id)
+                ->when($activeSchoolYear, function($q, $activeSchoolYear){
+                    return $q->where('school_year_id', $activeSchoolYear->id);
+                })
                 ->with('section')
                 ->first();
 
@@ -181,7 +172,7 @@ class RfidController extends Controller
                 if ($student) {
                     if (!$student->check_out) {
                         $student->update(['check_out' => now()->format('H:i:s')]);
-                        $this->message($studentTag->id, Cache::get('messages')['secondMessage'] . ' ' . now());
+                        // $this->message($studentTag->id, Cache::get('messages')['secondMessage'] . ' ' . now());
                     } else {
                         RfidLog::create([
                             'student_id' => $studentTag->id,
@@ -189,7 +180,7 @@ class RfidController extends Controller
                             'date' => $todayDate,
                             'tag_id' => $studentTag->tag->id
                         ]);
-                        $this->message($studentTag->id, Cache::get('messages')['firstMessage'] . ' ' . now());
+                        // $this->message($studentTag->id, Cache::get('messages')['firstMessage'] . ' ' . now());
                     }
                 } else {
                     RfidLog::create([
@@ -199,7 +190,7 @@ class RfidController extends Controller
                         'tag_id' => $studentTag->tag->id
                     ]);
                     
-                    $this->message($studentTag->id, Cache::get('messages')['firstMessage'] . ' ' . now());
+                    // $this->message($studentTag->id, Cache::get('messages')['firstMessage'] . ' ' . now());
                 }
 
 
@@ -241,8 +232,9 @@ class RfidController extends Controller
         }
 
         if($request->section){
-            $sectionId = Section::where('grade',$request->section[0])
-            ->where('section', $request->section[2])
+            $explodedSection = explode('-', $request->section);
+            $sectionId = Section::where('grade',$explodedSection[0])
+            ->where('section', $explodedSection[1])
             ->first()
             ->id;
             
@@ -278,12 +270,13 @@ class RfidController extends Controller
             ]);
         }
 
-        $activeSchoolYear = SchoolYear::latest()->first() ?? '';
+        $activeSchoolYear = SchoolYear::where('is_active', true)->first();
 
-        $activeSchoolYearId = $activeSchoolYear ? $activeSchoolYear->id : null;
 
         $student = Student::where('section_id', Session::get('section_id'))
-        ->where('school_year_id', $activeSchoolYearId)
+        ->when($activeSchoolYear, function($q, $activeSchoolYear){
+            return $q->where('school_year_id', $activeSchoolYear->id);
+        })
         ->where('tag_id', $tag->id)
         ->with('section')
         ->first();
@@ -343,7 +336,10 @@ class RfidController extends Controller
 
     public function checkHoliday(){
 
-
+        $today = now();
+        if ($today->isWeekend()) {
+            return false;
+        }
         
         $holidays = Holiday::all();
         foreach ($holidays as $holiday) {

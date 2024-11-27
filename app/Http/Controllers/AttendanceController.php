@@ -8,6 +8,7 @@ use Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DB;
 use Illuminate\Http\Request;
+use Session;
 ;
 
 class AttendanceController extends Controller
@@ -23,7 +24,7 @@ class AttendanceController extends Controller
     {
         $sanitizedName = preg_replace('/[\s,]+/', ' ', trim($name)); 
         $setOfNames = explode(' ', $sanitizedName);
-
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
 
         $attendances = Attendance::
         when($fromExcuse, function($q) {
@@ -57,25 +58,15 @@ class AttendanceController extends Controller
         })
         ->when($startDate && $endDate, function($q) use ($startDate, $endDate) {
             return $q->whereBetween('date', [$startDate, $endDate]);
-        });
+        })
+        ->whereHas('student', function($q) use ($activeSchoolYear){
+                return $q->when($activeSchoolYear, function($q, $activeSchoolYear) {
 
-
-
-
-
-        if(Auth::user()->isAdmin()){
-            $attendances->whereHas('student', function($q){
-                return $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
+                    return $q->where('school_year_id', $activeSchoolYear->id);
+                });
             });
     
-        }
 
-        elseif(Auth::user()->isTeacher()){
-            $attendances->whereHas('student', function($q){
-                return $q->where('school_year_id', SchoolYear::latest()->first()->id ?? '');
-            });
-
-        }
 
         
         if(!$fromExcuse){
@@ -165,13 +156,16 @@ class AttendanceController extends Controller
 
     public function attendances(Request $request){
 
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
+
         $attendances = Attendance::latest()->where(function ($query) {
             $query->whereIn('status_morning', ['absent'])
                   ->orWhereIn('status_lunch', ['absent']);
         })
-        ->whereHas('student', function ($q) {
-            $activeSchoolYearId = SchoolYear::where('is_active', true)->value('id');
-            $q->where('students.school_year_id', $activeSchoolYearId);
+        ->whereHas('student', function ($q) use ($activeSchoolYear) {
+            return $q->when($activeSchoolYear, function($q, $activeSchoolYear) {
+                return $q->where('school_year_id', $activeSchoolYear->id);
+            });
         })
         ->limit(30)
         ->get();

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Guardian;
 use App\Models\SchoolYear;
+use Auth;
 use Illuminate\Http\Request;
+use Session;
 
 class GuardianController extends Controller
 {
@@ -14,9 +16,12 @@ class GuardianController extends Controller
         $guardianName = $request->input('guardian_name');
         $phoneNumber = $request->input('phone_number');
 
-        $activeSchoolYear = SchoolYear::where('is_active', true)->first()->id ?? '';
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
+        // dd($activeSchoolYear->toArray());
         $guardians = Guardian::whereHas('students', function($query) use($activeSchoolYear){
-            return $query->where('school_year_id', $activeSchoolYear);
+            return $query->when($activeSchoolYear, function($q, $activeSchoolYear){
+                return $q->where('school_year_id', $activeSchoolYear->id);
+            });
         })
         ->when($guardianName, function ($q, $guardianName){
             return $q->where('name', 'LIKE', "%{$guardianName}%");
@@ -24,7 +29,7 @@ class GuardianController extends Controller
         ->when($phoneNumber, function($q, $phoneNumber){
             return $q->where('contact_info', 'LIKE', "%{$phoneNumber}%");
         })
-        ->paginate(5)
+        ->paginate(30)
         ->appends($request->all());
        
 
@@ -48,11 +53,19 @@ class GuardianController extends Controller
     public function index()
     {
         
-        $activeSchoolYear = SchoolYear::where('is_active', true)->first()->id ?? '';
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
+
+
         $guardians = Guardian::whereHas('students', function ($query) use($activeSchoolYear) {
-            $query->where('school_year_id', $activeSchoolYear);
+            return $query->when($activeSchoolYear, function ($q) use ($activeSchoolYear){
+                return $q->where('school_year_id', $activeSchoolYear->id);
+            });
+            
         })
-        ->with('students') 
+        ->with('students')
+
+        // dd($guardians->get()->toArray());
+
         ->paginate(20);
 
 
