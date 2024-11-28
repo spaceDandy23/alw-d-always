@@ -34,7 +34,7 @@ class UpdateStudentAttendance implements ShouldQueue
         if ($this->studentLog) {
             if (!$this->studentLog->check_out) {
                 $this->studentLog->update(['check_out' => now()->format('H:i:s')]);
-                // $this->message($this->student->id, Cache::get('messages')['secondMessage'] . ' ' . now());
+                $this->message($this->student->id, Cache::get('messages')['secondMessage'] . ' ' . now());
             } else {
                 RfidLog::create([
                     'student_id' => $this->student->id,
@@ -42,7 +42,7 @@ class UpdateStudentAttendance implements ShouldQueue
                     'date' => $todayDate,
                     'tag_id' => $this->student->tag_id
                 ]);
-                // $this->message($this->student->id, Cache::get('messages')['firstMessage'] . ' ' . now());
+                $this->message($this->student->id, Cache::get('messages')['firstMessage'] . ' ' . now());
             }
         } else {
             RfidLog::create([
@@ -52,7 +52,7 @@ class UpdateStudentAttendance implements ShouldQueue
                 'tag_id' => $this->student->tag_id
             ]);
             
-            // $this->message($this->student->id, Cache::get('messages')['firstMessage'] . ' ' . now());
+            $this->message($this->student->id, Cache::get('messages')['firstMessage'] . ' ' . now());
         }
     }
 
@@ -62,7 +62,7 @@ class UpdateStudentAttendance implements ShouldQueue
 
         $student = Student::find($studentID);
         foreach($student->guardians as $guardian){
-            SendMessageJob::dispatch($guardian->contact_info, $message)->onQueue('notification_queue');
+            SendMessageJob::dispatch($guardian->contact_info, $student->name . ' ' . $message)->onQueue('notification_queue');
         }
 
     }
