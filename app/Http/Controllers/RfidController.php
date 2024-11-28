@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\CheckOccasionJob;
-use App\Jobs\SendMessageJob;
+
+
+use App\Jobs\UpdateAttendance;
+use App\Jobs\UpdateStudentAttendance;
 use App\Models\Attendance;
 use App\Models\AttendanceSectionTeacher;
 use App\Models\Holiday;
@@ -120,8 +122,6 @@ class RfidController extends Controller
 
         if($request->isMethod('post')){
 
-            $now = now();
-
             if($this->checkHoliday()){
 
                 return response()->json(['success' => false, 'message' => 'no class']);
@@ -131,7 +131,6 @@ class RfidController extends Controller
                 return $this->verifyFromTeacher($request);
             }
 
-            $currentHour = now()->format('H');
             // if ($currentHour <= 17 && $currentHour > 6) {
                 if(true){
                 $activeSchoolYear = SchoolYear::where('is_active', true)->first();
@@ -153,6 +152,7 @@ class RfidController extends Controller
                 ->with('section')
                 ->first();
 
+
                 if(!$studentTag){
                     return response()->json([
                         'success' => false,
@@ -162,59 +162,17 @@ class RfidController extends Controller
                 $todayDate = now()->format('Y-m-d');
               
 
-                $student = RfidLog::where('student_id', $studentTag->id)
+                $studentLog = RfidLog::where('student_id', $studentTag->id)
                 ->where('date', $todayDate)
                 ->latest()
                 ->first();
 
 
+                UpdateStudentAttendance::dispatch($studentTag, $studentLog);
 
-                if ($student) {
-                    if (!$student->check_out) {
-                        $student->update(['check_out' => now()->format('H:i:s')]);
-                        // $this->message($studentTag->id, Cache::get('messages')['secondMessage'] . ' ' . now());
-                    } else {
-                        RfidLog::create([
-                            'student_id' => $studentTag->id,
-                            'check_in' => now()->format('H:i:s'),
-                            'date' => $todayDate,
-                            'tag_id' => $studentTag->tag->id
-                        ]);
-                        // $this->message($studentTag->id, Cache::get('messages')['firstMessage'] . ' ' . now());
-                    }
-                } else {
-                    RfidLog::create([
-                        'student_id' => $studentTag->id,
-                        'check_in' => now()->format('H:i:s'),
-                        'date' => $todayDate,
-                        'tag_id' => $studentTag->tag->id
-                    ]);
-                    
-                    // $this->message($studentTag->id, Cache::get('messages')['firstMessage'] . ' ' . now());
-                }
+                UpdateAttendance::dispatch($studentTag);
 
 
-
-                if($currentHour < 12){
-
-                    Attendance::updateOrCreate(
-                    ['student_id' => $studentTag->id,
-                                'date'=> now()->format('Y-m-d')],
-                        ['status_morning' => 'present']
-
-
-                    );
-                }
-                
-                if($currentHour >= 12){
-
-                    Attendance::updateOrCreate(
-                    ['student_id' => $studentTag->id,
-                                'date'=> now()->format('Y-m-d')],
-                        ['status_lunch' => 'present']
-
-                    );
-                }
 
                 return response()->json([
                     'success' => true,
@@ -246,18 +204,7 @@ class RfidController extends Controller
         return view('rfid.rfid_scan');
 
     }
-    public function message($studentID, $message){
 
-
-        $student = Student::find($studentID);
-
-
-
-        foreach($student->guardians as $guardian){
-            SendMessageJob::dispatch($guardian->contact_info, $message);
-        }
-
-    }
 
     public function verifyFromTeacher($request){
 

@@ -6,8 +6,10 @@ use App\Models\Guardian;
 use App\Models\Notification;
 use App\Models\SchoolYear;
 use App\Models\Student;
+use Auth;
 use Cache;
 use Illuminate\Http\Request;
+use Session;
 
 
 class NotificationController extends Controller
@@ -16,9 +18,16 @@ class NotificationController extends Controller
 
     public function index(){
 
-        $notifications = Notification::whereHas('guardian', function($q){
-            return $q->whereHas('students', function($q){
-                return $q->where('school_year_id', SchoolYear::where('is_active', true)->first()->id ?? '');
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
+
+        $notifications = Notification::whereHas('guardian', function($q) use ($activeSchoolYear){
+            return $q->whereHas('students', function($q) use ($activeSchoolYear){
+                return $q->when($activeSchoolYear, function($q, $activeSchoolYear){
+                    $q->where('school_year_id', $activeSchoolYear->id);
+                });
+                
+                
+
             });
 
         })
