@@ -240,7 +240,7 @@ class AttendanceController extends Controller
         $nowDate = now()->subDays(1)->format('Y-m-d');
         $startDate = now()->subDays(6)->format('Y-m-d');
 
-        
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
 
 
         $fullDay = Attendance::whereBetween('date',[$startDate, $nowDate])
@@ -253,6 +253,12 @@ class AttendanceController extends Controller
         ->groupBy('unique_dates')
         // ->having('total_lunch_absent', '>=', 90)
         // ->orHaving('total_morning_absent', '>=', 90)
+        ->whereHas('student', function($q) use ($activeSchoolYear){
+            return $q->when($activeSchoolYear, function($q, $activeSchoolYear){
+                return $q->where('school_year_id', $activeSchoolYear->id);
+            });
+
+        })
         ->get();
         // dd($fullDay->toArray(), $startDate, $nowDate);
 
@@ -298,7 +304,7 @@ class AttendanceController extends Controller
 
         $grade = $request->grade;
         $section = $request->section;
-
+        $activeSchoolYear = Session::get(Auth::id()) ?? SchoolYear::where('is_active', true)->first();
         $attendances = 
         Attendance::when($setOfNames, function($q, $setOfNames){
             foreach ($setOfNames as $name) {
@@ -308,6 +314,12 @@ class AttendanceController extends Controller
                 });
             }
 
+        })
+        ->whereHas('student', function($q) use ($activeSchoolYear){
+            return $q->when($activeSchoolYear, function($q, $activeSchoolYear){
+                return $q->where('school_year_id', $activeSchoolYear->id);
+
+            });
         })
         ->when($grade, function($q, $grade) {
             return $q->whereHas('student.section', function($q) use ($grade) {

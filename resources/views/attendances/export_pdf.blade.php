@@ -11,7 +11,7 @@
     <h1>Attendance Report</h1>
     <h3>From: {{ $startDate ?? 'N/A' }} To: {{ $endDate ?? 'N/A' }}</h3>
 
-    <table cellpadding="5" cellspacing="0">
+    <table>
         <thead>
             <tr>
                 <th>Name</th>
