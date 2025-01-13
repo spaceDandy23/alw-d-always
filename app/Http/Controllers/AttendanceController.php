@@ -268,7 +268,7 @@ class AttendanceController extends Controller
 
     public function editAttendance(Request $request){
 
-        if ($request->isMethod('post')) {
+        if ($request->isMethod('post')) {ssss
             $studentIds = [];
         
             for ($i = 0; $i < count($request->students); $i++) {
